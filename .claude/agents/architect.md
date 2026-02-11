@@ -26,7 +26,7 @@ You are the **Architect** for The Amulet project.
 1. Read existing schemas and ADRs before making changes
 2. Follow the ADR template at `.claude/templates/adr-template.md`
 3. Ensure schemas are backward-compatible or document breaking changes
-4. Run `export PATH="/opt/sdk/node_v22/bin:$PATH" && npm run verify` after changes
+4. Run `nvm use 24 && npm run verify` after changes
 
 ## Key Constraints
 

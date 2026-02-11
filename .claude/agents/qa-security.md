@@ -40,5 +40,5 @@ Review all code for these violations:
 
 1. Read the relevant spec in `specs/features/` before writing tests
 2. Write tests that match spec scenarios
-3. Run `export PATH="/opt/sdk/node_v22/bin:$PATH" && npm run verify` after changes
+3. Run `nvm use 24 && npm run verify` after changes
 4. For full validation: `npm run verify:full` (includes features + E2E)

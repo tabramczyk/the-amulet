@@ -42,7 +42,7 @@ function updatePanel(): void {
 
 1. Read `src/ui/dom-helpers.ts` for available helpers
 2. Follow existing patterns in `src/ui/stats-panel.ts` (reference implementation)
-3. Run `export PATH="/opt/sdk/node_v22/bin:$PATH" && npm run verify` after changes
+3. Run `nvm use 24 && npm run verify` after changes
 
 ## Key Constraints
 

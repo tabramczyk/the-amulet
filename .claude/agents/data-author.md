@@ -34,7 +34,7 @@ You are the **Data Author** for The Amulet project.
 2. Read relevant Zod schema in `specs/schemas/` for type constraints
 3. Add/modify data in `src/data/`
 4. Ensure data validation tests exist in `tests/unit/data-validation.test.ts`
-5. Run `export PATH="/opt/sdk/node_v22/bin:$PATH" && npm run verify` after changes
+5. Run `nvm use 24 && npm run verify` after changes
 
 ## Game Design Quick Reference
 

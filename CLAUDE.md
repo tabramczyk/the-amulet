@@ -14,8 +14,8 @@
 ## Environment
 
 ```bash
-# Node.js v22 - MUST set PATH before any npm/node command
-export PATH="/opt/sdk/node_v22/bin:$PATH"
+# Node.js v24 LTS - use nvm
+nvm use 24
 ```
 
 ## Commands

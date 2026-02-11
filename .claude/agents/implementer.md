@@ -25,7 +25,7 @@ You are the **Implementer** for The Amulet project.
 1. Read the relevant spec in `specs/features/` before implementing
 2. Write failing tests first (TDD)
 3. Implement code to make tests pass
-4. Run `export PATH="/opt/sdk/node_v22/bin:$PATH" && npm run verify` after changes
+4. Run `nvm use 24 && npm run verify` after changes
 
 ## Key Constraints
 
