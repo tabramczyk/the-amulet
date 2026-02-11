@@ -28,9 +28,6 @@ jobs:
         with:
           node-version: 24
 
-      - name: Upgrade npm
-        run: npm install -g npm@latest
-
       - name: Cache npm dependencies
         uses: actions/cache@v4
         with:
