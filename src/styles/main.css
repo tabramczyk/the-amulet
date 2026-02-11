@@ -1,0 +1,421 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --color-bg: #1a1a2e;
+  --color-surface: #16213e;
+  --color-primary: #e94560;
+  --color-secondary: #0f3460;
+  --color-text: #eee;
+  --color-text-muted: #aaa;
+  --color-accent: #c4a35a;
+  --font-main: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+body {
+  font-family: var(--font-main);
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  min-height: 100vh;
+}
+
+#app {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+/* --- Top Bar --- */
+
+.top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  background: var(--color-surface);
+  border-radius: 6px;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.top-bar__stat {
+  display: flex;
+  align-items: baseline;
+  gap: 0.35rem;
+}
+
+.top-bar__label {
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+}
+
+.top-bar__value {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--color-accent);
+}
+
+.top-bar__location {
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+.top-bar__lives {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+/* --- Main Layout (two-column) --- */
+
+.game-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+/* --- Panel Shared --- */
+
+.panel {
+  background: var(--color-surface);
+  border-radius: 6px;
+  padding: 1rem;
+}
+
+.panel__title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  color: var(--color-accent);
+  border-bottom: 1px solid var(--color-secondary);
+  padding-bottom: 0.4rem;
+}
+
+/* --- Click Actions Panel --- */
+
+.click-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.click-action-btn {
+  display: block;
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  text-align: left;
+  background: var(--color-secondary);
+  color: var(--color-text);
+  border: 1px solid transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: var(--font-main);
+  font-size: 0.9rem;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.click-action-btn:hover:not(:disabled) {
+  background: #163a6e;
+  border-color: var(--color-accent);
+}
+
+.click-action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.click-action-btn__cost {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  margin-top: 0.2rem;
+}
+
+/* --- Continuous Actions Panel --- */
+
+.continuous-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.continuous-action-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.65rem;
+  background: var(--color-secondary);
+  border-radius: 4px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.continuous-action-item:hover {
+  background: #163a6e;
+  border-color: var(--color-accent);
+}
+
+.continuous-action-item--active {
+  border-color: var(--color-primary);
+  background: #1e2a4a;
+}
+
+.continuous-action-item__indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-text-muted);
+  flex-shrink: 0;
+}
+
+.continuous-action-item--active .continuous-action-item__indicator {
+  background: var(--color-primary);
+  box-shadow: 0 0 6px var(--color-primary);
+}
+
+.continuous-action-item__name {
+  font-size: 0.9rem;
+}
+
+.continuous-action-item__desc {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+/* --- Lifestyle Panel --- */
+
+.lifestyle-panel {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.lifestyle-section__title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.lifestyle-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.lifestyle-option {
+  display: block;
+  width: 100%;
+  padding: 0.4rem 0.6rem;
+  text-align: left;
+  background: var(--color-secondary);
+  color: var(--color-text);
+  border: 1px solid transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: var(--font-main);
+  font-size: 0.85rem;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.lifestyle-option:hover {
+  background: #163a6e;
+  border-color: var(--color-accent);
+}
+
+.lifestyle-option--active {
+  border-color: var(--color-primary);
+  background: #1e2a4a;
+}
+
+.top-bar__value--positive {
+  color: #5cb85c;
+}
+
+.top-bar__value--negative {
+  color: var(--color-primary);
+}
+
+/* --- Stats Panel (Bottom) --- */
+
+.stats-panel {
+  margin-top: 0;
+}
+
+.stats-panel__section {
+  margin-bottom: 1rem;
+}
+
+.stats-panel__section:last-child {
+  margin-bottom: 0;
+}
+
+.stats-panel__section-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.stat-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
+  font-size: 0.85rem;
+}
+
+.stat-row__name {
+  min-width: 110px;
+}
+
+.stat-row__level {
+  font-weight: 600;
+  min-width: 40px;
+  text-align: right;
+}
+
+.stat-row__prestige {
+  font-size: 0.75rem;
+  color: var(--color-accent);
+}
+
+.stat-row__pay {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  margin-left: auto;
+}
+
+/* --- Progress Bar --- */
+
+.progress-bar {
+  flex: 1;
+  height: 6px;
+  background: var(--color-bg);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progress-bar__fill {
+  height: 100%;
+  background: var(--color-primary);
+  border-radius: 3px;
+  transition: width 0.15s ease;
+}
+
+/* --- Message Log --- */
+
+.message-log {
+  margin-top: 1rem;
+}
+
+.message-log__entry {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  padding: 0.2rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* --- Game Controls --- */
+
+.game-controls {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.game-controls__btn {
+  padding: 0.4rem 1rem;
+  background: var(--color-secondary);
+  color: var(--color-text);
+  border: 1px solid var(--color-text-muted);
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: var(--font-main);
+  font-size: 0.85rem;
+}
+
+.game-controls__btn:hover {
+  background: #163a6e;
+}
+
+.game-controls__btn--primary {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.game-controls__btn--primary:hover {
+  background: #d63551;
+}
+
+/* --- Death Overlay --- */
+
+.death-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.death-overlay__title {
+  font-size: 2rem;
+  color: var(--color-accent);
+  margin-bottom: 1rem;
+}
+
+.death-overlay__message {
+  font-size: 1rem;
+  color: var(--color-text);
+  margin-bottom: 2rem;
+  text-align: center;
+  max-width: 400px;
+}
+
+.death-overlay__btn {
+  padding: 0.75rem 2rem;
+  background: var(--color-primary);
+  color: var(--color-text);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1.1rem;
+  font-family: var(--font-main);
+}
+
+.death-overlay__btn:hover {
+  background: #d63551;
+}
+
+/* --- Responsive: stack columns on mobile --- */
+
+@media (max-width: 640px) {
+  .game-columns {
+    grid-template-columns: 1fr;
+  }
+
+  .lifestyle-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .top-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.4rem;
+  }
+}
