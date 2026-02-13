@@ -36,19 +36,35 @@ describe('Location System', () => {
       expect(areLocationRequirementsMet('fields', defaultSkills, jobs)).toBe(true);
     });
 
-    it('should not allow village without strength 20', () => {
+    it('should not allow village without farmer level 5', () => {
       expect(areLocationRequirementsMet('village', defaultSkills, defaultJobs)).toBe(false);
     });
 
-    it('should allow village with strength 20', () => {
-      const skills = defaultSkills.map((s) =>
-        s.skillId === 'strength' ? { ...s, level: 20 } : s,
+    it('should allow village with farmer level 5', () => {
+      const jobs = defaultJobs.map((j) =>
+        j.jobId === 'farmer' ? { ...j, level: 5 } : j,
       );
-      expect(areLocationRequirementsMet('village', skills, defaultJobs)).toBe(true);
+      expect(areLocationRequirementsMet('village', defaultSkills, jobs)).toBe(true);
     });
 
     it('should return false for nonexistent location', () => {
       expect(areLocationRequirementsMet('nonexistent', defaultSkills, defaultJobs)).toBe(false);
+    });
+
+    it('should not allow barracks without army clan', () => {
+      expect(areLocationRequirementsMet('barracks', defaultSkills, defaultJobs)).toBe(false);
+    });
+
+    it('should allow barracks with army clan', () => {
+      expect(areLocationRequirementsMet('barracks', defaultSkills, defaultJobs, ['army'])).toBe(true);
+    });
+
+    it('should not allow bandit_hideout without bandits clan', () => {
+      expect(areLocationRequirementsMet('bandit_hideout', defaultSkills, defaultJobs)).toBe(false);
+    });
+
+    it('should allow bandit_hideout with bandits clan', () => {
+      expect(areLocationRequirementsMet('bandit_hideout', defaultSkills, defaultJobs, ['bandits'])).toBe(true);
     });
   });
 
@@ -68,6 +84,14 @@ describe('Location System', () => {
     it('should return empty array for nonexistent location', () => {
       expect(getAvailableJobIds('nonexistent')).toEqual([]);
     });
+
+    it('should return soldier for barracks', () => {
+      expect(getAvailableJobIds('barracks')).toEqual(['soldier']);
+    });
+
+    it('should return robbery for bandit_hideout', () => {
+      expect(getAvailableJobIds('bandit_hideout')).toEqual(['robbery']);
+    });
   });
 
   describe('getAvailableTrainingSkillIds', () => {
@@ -85,6 +109,14 @@ describe('Location System', () => {
 
     it('should return empty array for nonexistent location', () => {
       expect(getAvailableTrainingSkillIds('nonexistent')).toEqual([]);
+    });
+
+    it('should return strength for barracks', () => {
+      expect(getAvailableTrainingSkillIds('barracks')).toEqual(['strength']);
+    });
+
+    it('should return strength and endurance for bandit_hideout', () => {
+      expect(getAvailableTrainingSkillIds('bandit_hideout')).toEqual(['strength', 'endurance']);
     });
   });
 });

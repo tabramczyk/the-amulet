@@ -1,6 +1,9 @@
 import { HOUSING_OPTIONS } from '../data/housing';
 import { FOOD_OPTIONS } from '../data/food';
 import { CONTINUOUS_ACTIONS } from '../data/actions';
+import { JOBS } from '../data/jobs';
+import { getJobIdFromAction } from './action-system';
+import type { JobState, SkillState } from '../../specs/schemas';
 
 /**
  * Get the daily cost of housing. Returns 0 if no housing selected.
@@ -32,16 +35,49 @@ export function getDailyExpenses(housingId: string | null, foodId: string | null
 export function getDailyEarnings(
   activeJobActionId: string | null,
   activeSkillActionId: string | null,
+  jobs: JobState[] = [],
+  skills: SkillState[] = [],
 ): number {
   let total = 0;
-  for (const actionId of [activeJobActionId, activeSkillActionId]) {
-    if (!actionId) continue;
-    const action = CONTINUOUS_ACTIONS[actionId];
-    if (!action) continue;
-    total += action.effects
-      .filter((e) => e.type === 'addMoney')
-      .reduce((sum, e) => sum + e.amount, 0);
+
+  // Job action earnings with level scaling
+  if (activeJobActionId) {
+    const action = CONTINUOUS_ACTIONS[activeJobActionId];
+    if (action) {
+      const jobId = getJobIdFromAction(activeJobActionId);
+      const jobLevel = jobId ? (jobs.find((j) => j.jobId === jobId)?.level ?? 0) : 0;
+      total += action.effects
+        .filter((e) => e.type === 'addMoney')
+        .reduce((sum, e) => sum + e.amount + Math.floor(jobLevel / 5), 0);
+    }
   }
+
+  // Skill action earnings (no scaling)
+  if (activeSkillActionId) {
+    const action = CONTINUOUS_ACTIONS[activeSkillActionId];
+    if (action) {
+      total += action.effects
+        .filter((e) => e.type === 'addMoney')
+        .reduce((sum, e) => sum + e.amount, 0);
+    }
+  }
+
+  // Wage bonus from skills
+  if (activeJobActionId) {
+    const jId = getJobIdFromAction(activeJobActionId);
+    if (jId) {
+      const jobDef = JOBS[jId];
+      if (jobDef?.wageBonusSkills) {
+        for (const bonus of jobDef.wageBonusSkills) {
+          const skillLevel = skills.find((s) => s.skillId === bonus.skillId)?.level ?? 0;
+          if (skillLevel > 0) {
+            total += Math.floor(skillLevel * bonus.bonusPerLevel);
+          }
+        }
+      }
+    }
+  }
+
   return total;
 }
 
@@ -70,6 +106,8 @@ export function getNetDailyIncome(
   activeSkillActionId: string | null,
   housingId: string | null,
   foodId: string | null,
+  jobs: JobState[] = [],
+  skills: SkillState[] = [],
 ): number {
-  return getDailyEarnings(activeJobActionId, activeSkillActionId) - getDailyExpenses(housingId, foodId);
+  return getDailyEarnings(activeJobActionId, activeSkillActionId, jobs, skills) - getDailyExpenses(housingId, foodId);
 }

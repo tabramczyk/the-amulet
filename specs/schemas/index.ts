@@ -4,11 +4,11 @@ export {
   SkillSchema,
   SkillTypeSchema,
   SkillStateSchema,
-  SkillPrestigeSchema,
+  SkillReincarnationBonusSchema,
   type Skill,
   type SkillType,
   type SkillState,
-  type SkillPrestige,
+  type SkillReincarnationBonus,
 } from './skill.schema';
 
 export {
@@ -17,13 +17,13 @@ export {
   SkillRequirementSchema,
   JobRequirementSchema,
   JobStateSchema,
-  JobPrestigeSchema,
+  JobReincarnationBonusSchema,
   type Job,
   type JobRequirements,
   type SkillRequirement,
   type JobRequirement,
   type JobState,
-  type JobPrestige,
+  type JobReincarnationBonus,
 } from './job.schema';
 
 export {
@@ -54,11 +54,11 @@ export {
   GameStateSchema,
   TimeStateSchema,
   PlayerStateSchema,
-  PrestigeStateSchema,
+  ReincarnationStateSchema,
   type GameState,
   type TimeState,
   type PlayerState,
-  type PrestigeState,
+  type ReincarnationState,
 } from './game-state.schema';
 
 export {
@@ -70,3 +70,13 @@ export {
   FoodOptionSchema,
   type FoodOption,
 } from './food.schema';
+
+export {
+  ClanSchema,
+  type Clan,
+} from './clan.schema';
+
+export {
+  ClickActionCategorySchema,
+  type ClickActionCategory,
+} from './action.schema';

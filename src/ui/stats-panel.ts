@@ -17,7 +17,7 @@ let jobsContainer: HTMLElement;
 let lifestyleContainer: HTMLElement;
 let lifestyleHousingEl: HTMLElement;
 let lifestyleFoodEl: HTMLElement;
-let prestigeContainer: HTMLElement;
+let reincarnationContainer: HTMLElement;
 let panel: HTMLElement;
 
 // Cache refs for efficient updates
@@ -59,16 +59,16 @@ export function createStatsPanel(): HTMLElement {
   lifestyleContainer.appendChild(lifestyleFoodEl);
   lifestyleSection.appendChild(lifestyleContainer);
 
-  // Prestige section
-  const prestigeSection = el('div', { className: 'stats-panel__section' });
-  prestigeSection.appendChild(el('h3', { className: 'stats-panel__section-title', text: 'Prestige' }));
-  prestigeContainer = el('div');
-  prestigeSection.appendChild(prestigeContainer);
+  // Reincarnation section
+  const reincarnationSection = el('div', { className: 'stats-panel__section' });
+  reincarnationSection.appendChild(el('h3', { className: 'stats-panel__section-title', text: 'Reincarnation' }));
+  reincarnationContainer = el('div');
+  reincarnationSection.appendChild(reincarnationContainer);
 
   panel.appendChild(skillsSection);
   panel.appendChild(jobsSection);
   panel.appendChild(lifestyleSection);
-  panel.appendChild(prestigeSection);
+  panel.appendChild(reincarnationSection);
 
   buildSkillRows();
   buildJobRows();
@@ -86,7 +86,7 @@ function buildSkillRows(): void {
     const levelEl = el('span', { className: 'stat-row__level', text: '0' });
     const barEl = progressBar(0);
     const xpEl = el('span', {
-      className: 'stat-row__prestige',
+      className: 'stat-row__reincarnation',
       text: '',
     });
 
@@ -110,7 +110,7 @@ function buildJobRows(): void {
     const levelEl = el('span', { className: 'stat-row__level', text: '0' });
     const barEl = progressBar(0);
     const xpEl = el('span', {
-      className: 'stat-row__prestige',
+      className: 'stat-row__reincarnation',
       text: '',
     });
 
@@ -155,9 +155,9 @@ export function updateStatsPanel(): void {
       if (skillDef.type === 'meta') {
         tooltip += `\nCurrent bonus: +${skillState.level}% XP to all sources`;
       }
-      const prestige = state.prestige.skillPrestige.find(sp => sp.skillId === skillState.skillId);
-      if (prestige && prestige.totalLevelsAllLives > 0) {
-        tooltip += `\nPrestige bonus: +${prestige.totalLevelsAllLives}% XP`;
+      const bonus = state.reincarnation.skillBonuses.find(sb => sb.skillId === skillState.skillId);
+      if (bonus && bonus.totalLevelsAllLives > 0) {
+        tooltip += `\nReincarnation bonus: +${bonus.totalLevelsAllLives}% XP`;
       }
       cached.row.title = tooltip;
     }
@@ -176,13 +176,26 @@ export function updateStatsPanel(): void {
       cached.xpEl,
       `${formatNumber(jobState.xp)}/${formatNumber(jobState.xpToNextLevel)}`,
     );
+    const jobDef = JOBS[jobState.jobId];
+    if (jobDef && cached.payEl) {
+      let dynamicPay = jobDef.moneyPerTick + Math.floor(jobState.level / 5);
+      if (jobDef.wageBonusSkills) {
+        for (const bonus of jobDef.wageBonusSkills) {
+          const skillState = state.skills.find((s) => s.skillId === bonus.skillId);
+          if (skillState && skillState.level > 0) {
+            dynamicPay += Math.floor(skillState.level * bonus.bonusPerLevel);
+          }
+        }
+      }
+      setText(cached.payEl, `${dynamicPay} gold/day`);
+    }
   }
 
   // Update lifestyle display
   updateLifestyleDisplay();
 
-  // Update prestige display
-  updatePrestigeDisplay();
+  // Update reincarnation display
+  updateReincarnationDisplay();
 }
 
 function updateLifestyleDisplay(): void {
@@ -211,45 +224,52 @@ function updateLifestyleDisplay(): void {
   }
 }
 
-function updatePrestigeDisplay(): void {
+function updateReincarnationDisplay(): void {
   const state = store.getState();
-  clearChildren(prestigeContainer);
+  clearChildren(reincarnationContainer);
 
-  const hasPrestige =
-    state.prestige.skillPrestige.some((sp) => sp.totalLevelsAllLives > 0) ||
-    state.prestige.jobPrestige.some((jp) => jp.totalLevelsAllLives > 0);
+  const hasSkillBonuses = state.reincarnation.skillBonuses.some((sb) => sb.totalLevelsAllLives > 0);
+  const hasJobBonuses = state.reincarnation.jobBonuses.some((jb) => jb.totalLevelsAllLives > 0);
 
-  if (!hasPrestige) {
-    prestigeContainer.appendChild(
+  if (!hasSkillBonuses && !hasJobBonuses) {
+    reincarnationContainer.appendChild(
       el('div', {
         className: 'stat-row',
-        text: 'No prestige bonuses yet. Complete a life to earn them.',
+        text: 'No reincarnation bonuses yet. Complete a life to earn them.',
       }),
     );
     return;
   }
 
-  for (const sp of state.prestige.skillPrestige) {
-    if (sp.totalLevelsAllLives <= 0) continue;
-    const skillDef = SKILLS[sp.skillId];
-    const name = skillDef?.name ?? sp.skillId;
-    const bonus = sp.totalLevelsAllLives;
-    const row = el('div', {
-      className: 'stat-row',
-      text: `+${bonus}% ${name} XP`,
-    });
-    prestigeContainer.appendChild(row);
+  // Skill bonuses
+  if (hasSkillBonuses) {
+    reincarnationContainer.appendChild(
+      el('div', { className: 'stats-panel__subsection-title', text: 'Skills' }),
+    );
+    for (const sb of state.reincarnation.skillBonuses) {
+      if (sb.totalLevelsAllLives <= 0) continue;
+      const skillDef = SKILLS[sb.skillId];
+      const name = skillDef?.name ?? sb.skillId;
+      const bonus = sb.totalLevelsAllLives;
+      reincarnationContainer.appendChild(
+        el('div', { className: 'stat-row', text: `+${bonus}% ${name} XP` }),
+      );
+    }
   }
 
-  for (const jp of state.prestige.jobPrestige) {
-    if (jp.totalLevelsAllLives <= 0) continue;
-    const jobDef = JOBS[jp.jobId];
-    const name = jobDef?.name ?? jp.jobId;
-    const bonus = jp.totalLevelsAllLives;
-    const row = el('div', {
-      className: 'stat-row',
-      text: `+${bonus}% ${name} XP`,
-    });
-    prestigeContainer.appendChild(row);
+  // Job bonuses
+  if (hasJobBonuses) {
+    reincarnationContainer.appendChild(
+      el('div', { className: 'stats-panel__subsection-title', text: 'Jobs' }),
+    );
+    for (const jb of state.reincarnation.jobBonuses) {
+      if (jb.totalLevelsAllLives <= 0) continue;
+      const jobDef = JOBS[jb.jobId];
+      const name = jobDef?.name ?? jb.jobId;
+      const bonus = jb.totalLevelsAllLives;
+      reincarnationContainer.appendChild(
+        el('div', { className: 'stat-row', text: `+${bonus}% ${name} XP` }),
+      );
+    }
   }
 }

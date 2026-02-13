@@ -31,8 +31,6 @@ export function createLifestylePanel(): HTMLElement {
   panel.appendChild(housingSection);
   panel.appendChild(foodSection);
 
-  buildFoodButtons(); // Food is global, build once
-
   return panel;
 }
 
@@ -67,7 +65,7 @@ function buildHousingButtons(locationId: string): void {
   lastLocationId = locationId;
 }
 
-function buildFoodButtons(): void {
+function buildFoodButtons(locationId: string): void {
   clearChildren(foodContainer);
   foodCache.clear();
 
@@ -81,8 +79,15 @@ function buildFoodButtons(): void {
   foodContainer.appendChild(noneBtn);
   foodCache.set('none', { btn: noneBtn });
 
-  // All food options (global)
-  for (const option of Object.values(FOOD_OPTIONS)) {
+  // Check if any food is location-specific for this location
+  const locationFood = Object.values(FOOD_OPTIONS).filter(
+    (f) => f.locationId === locationId,
+  );
+  const foodToShow = locationFood.length > 0
+    ? locationFood
+    : Object.values(FOOD_OPTIONS).filter((f) => !f.locationId);
+
+  for (const option of foodToShow) {
     const btn = document.createElement('button');
     btn.className = 'lifestyle-option';
     btn.textContent = `${option.name} (${option.dailyCost} gold/day, +${option.xpBonusPercent}% XP)`;
@@ -99,9 +104,10 @@ export function updateLifestylePanel(): void {
   const state = store.getState();
   const locationId = state.player.currentLocationId;
 
-  // Rebuild housing buttons on location change
+  // Rebuild housing AND food buttons on location change
   if (locationId !== lastLocationId) {
     buildHousingButtons(locationId);
+    buildFoodButtons(locationId);
   }
 
   // Update housing active state

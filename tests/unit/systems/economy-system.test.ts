@@ -7,6 +7,7 @@ import {
   getNetDailyIncome,
   getLifestyleXpMultiplier,
 } from '../../../src/systems/economy-system';
+import type { SkillState } from '../../../specs/schemas';
 
 describe('Economy System', () => {
   describe('getHousingDailyCost', () => {
@@ -15,9 +16,9 @@ describe('Economy System', () => {
     });
 
     it('should return cost for valid housing ID', () => {
-      expect(getHousingDailyCost('tent')).toBe(1);
-      expect(getHousingDailyCost('lean_to')).toBe(2);
-      expect(getHousingDailyCost('room')).toBe(3);
+      expect(getHousingDailyCost('tent')).toBe(2);
+      expect(getHousingDailyCost('lean_to')).toBe(3);
+      expect(getHousingDailyCost('room')).toBe(5);
     });
 
     it('should return 0 for invalid housing ID', () => {
@@ -32,7 +33,7 @@ describe('Economy System', () => {
 
     it('should return cost for valid food ID', () => {
       expect(getFoodDailyCost('scraps')).toBe(1);
-      expect(getFoodDailyCost('bread')).toBe(2);
+      expect(getFoodDailyCost('bread')).toBe(3);
     });
 
     it('should return 0 for invalid food ID', () => {
@@ -46,7 +47,7 @@ describe('Economy System', () => {
     });
 
     it('should return housing cost only when food is null', () => {
-      expect(getDailyExpenses('tent', null)).toBe(1);
+      expect(getDailyExpenses('tent', null)).toBe(2);
     });
 
     it('should return food cost only when housing is null', () => {
@@ -54,7 +55,7 @@ describe('Economy System', () => {
     });
 
     it('should return combined cost when both are set', () => {
-      expect(getDailyExpenses('room', 'bread')).toBe(5); // 3 + 2
+      expect(getDailyExpenses('room', 'bread')).toBe(8); // 5 + 3
     });
   });
 
@@ -93,6 +94,30 @@ describe('Economy System', () => {
       // farming earns 3
       expect(getDailyEarnings('begging', 'farming')).toBe(4);
     });
+
+    it('should include wage bonus from skills for soldier', () => {
+      const skills: SkillState[] = [
+        { skillId: 'strength', level: 10, xp: 0, xpToNextLevel: 10 },
+      ];
+      // soldiering: 4 money + Math.floor(10 * 0.1) = 4 + 1 = 5
+      expect(getDailyEarnings('soldiering', null, [], skills)).toBe(5);
+    });
+
+    it('should include wage bonus from multiple skills for robbery', () => {
+      const skills: SkillState[] = [
+        { skillId: 'strength', level: 20, xp: 0, xpToNextLevel: 10 },
+        { skillId: 'endurance', level: 20, xp: 0, xpToNextLevel: 10 },
+      ];
+      // robbing: 4 money + Math.floor(20 * 0.05) + Math.floor(20 * 0.05) = 4 + 1 + 1 = 6
+      expect(getDailyEarnings('robbing', null, [], skills)).toBe(6);
+    });
+
+    it('should not include wage bonus when skill level is 0', () => {
+      const skills: SkillState[] = [
+        { skillId: 'strength', level: 0, xp: 0, xpToNextLevel: 10 },
+      ];
+      expect(getDailyEarnings('soldiering', null, [], skills)).toBe(4);
+    });
   });
 
   describe('getNetDailyIncome', () => {
@@ -101,28 +126,28 @@ describe('Economy System', () => {
     });
 
     it('should return positive income when earnings exceed expenses', () => {
-      // laboring earns 5, tent costs 1, scraps costs 1 => net 3
-      expect(getNetDailyIncome('laboring', null, 'tent', 'scraps')).toBe(3);
+      // laboring earns 5, tent costs 2, scraps costs 1 => net 2
+      expect(getNetDailyIncome('laboring', null, 'tent', 'scraps')).toBe(2);
     });
 
     it('should return zero when earnings equal expenses', () => {
-      // begging earns 1, tent costs 1 => net 0
-      expect(getNetDailyIncome('begging', null, 'tent', null)).toBe(0);
+      // farming earns 3, bread costs 3 => net 0
+      expect(getNetDailyIncome('farming', null, null, 'bread')).toBe(0);
     });
 
     it('should return negative when expenses exceed earnings', () => {
-      // begging earns 1, room costs 3, bread costs 2 => net -4
-      expect(getNetDailyIncome('begging', null, 'room', 'bread')).toBe(-4);
+      // begging earns 1, room costs 5, bread costs 3 => net -7
+      expect(getNetDailyIncome('begging', null, 'room', 'bread')).toBe(-7);
     });
 
     it('should return negative expenses with no actions', () => {
-      // no earnings, tent costs 1 => net -1
-      expect(getNetDailyIncome(null, null, 'tent', null)).toBe(-1);
+      // no earnings, tent costs 2 => net -2
+      expect(getNetDailyIncome(null, null, 'tent', null)).toBe(-2);
     });
 
     it('should include earnings from both job and skill actions', () => {
-      // begging earns 1, train_concentration earns 0, tent costs 1 => net 0
-      expect(getNetDailyIncome('begging', 'train_concentration', 'tent', null)).toBe(0);
+      // begging earns 1, train_concentration earns 0, tent costs 2 => net -1
+      expect(getNetDailyIncome('begging', 'train_concentration', 'tent', null)).toBe(-1);
     });
   });
 

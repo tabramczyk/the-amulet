@@ -13,6 +13,10 @@ export const LocationRequirementSchema = z.discriminatedUnion('type', [
     jobId: z.string().min(1),
     level: z.number().int().min(0),
   }),
+  z.object({
+    type: z.literal('clan'),
+    clanId: z.string().min(1),
+  }),
 ]);
 
 export type LocationRequirement = z.infer<typeof LocationRequirementSchema>;

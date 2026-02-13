@@ -7,6 +7,12 @@ import { el, clearChildren, button, setText, formatRequirement } from './dom-hel
 
 let listContainer: HTMLElement;
 let panel: HTMLElement;
+let storySection: HTMLElement;
+let actionsSection: HTMLElement;
+let storyHeader: HTMLElement;
+let actionsHeader: HTMLElement;
+let storyContainer: HTMLElement;
+let actionsContainer: HTMLElement;
 
 const actionCache = new Map<string, {
   btn: HTMLButtonElement;
@@ -43,6 +49,20 @@ function buildClickActionRows(locationId: string): void {
   clearChildren(listContainer);
   actionCache.clear();
 
+  // Create Story section
+  storySection = el('div', { className: 'click-actions-section' });
+  storyHeader = el('h3', { className: 'click-actions-section__title', text: 'Story' });
+  storyContainer = el('div', { className: 'click-actions' });
+  storySection.appendChild(storyHeader);
+  storySection.appendChild(storyContainer);
+
+  // Create Actions section
+  actionsSection = el('div', { className: 'click-actions-section' });
+  actionsHeader = el('h3', { className: 'click-actions-section__title', text: 'Actions' });
+  actionsContainer = el('div', { className: 'click-actions' });
+  actionsSection.appendChild(actionsHeader);
+  actionsSection.appendChild(actionsContainer);
+
   const actions = Object.values(CLICK_ACTIONS).filter(
     (a) => a.locationId === locationId,
   );
@@ -65,9 +85,15 @@ function buildClickActionRows(locationId: string): void {
     const reqEl = el('span', { className: 'click-action-btn__req' });
     btn.appendChild(reqEl);
 
-    listContainer.appendChild(btn);
+    // Route to correct section based on category
+    const targetContainer = action.category === 'story' ? storyContainer : actionsContainer;
+    targetContainer.appendChild(btn);
     actionCache.set(action.id, { btn, reqEl });
   }
+
+  // Append sections to main container
+  listContainer.appendChild(storySection);
+  listContainer.appendChild(actionsSection);
 
   lastLocationId = locationId;
 }
@@ -84,6 +110,9 @@ export function updateClickActionsPanel(): void {
     (a) => a.locationId === locationId,
   );
 
+  let storyVisible = false;
+  let actionsVisible = false;
+
   for (const action of actions) {
     const cached = actionCache.get(action.id);
     if (!cached) continue;
@@ -96,13 +125,36 @@ export function updateClickActionsPanel(): void {
         state.jobs,
         state.player.storyFlags,
         state.time.currentAge,
+        state.player.clanIds,
       );
+
+    // Hide actions with unmet story flag, exceeded maxAge, or unmet clan requirements
+    const hasUnmetStoryFlag = action.requirements.some(
+      (req) => req.type === 'storyFlag' && !isRequirementMet(req, state.skills, state.jobs, state.player.storyFlags, state.time.currentAge, state.player.clanIds)
+    );
+    const hasExceededMaxAge = action.requirements.some(
+      (req) => req.type === 'age' && req.maxAge !== undefined && state.time.currentAge > req.maxAge
+    );
+    const hasUnmetClan = action.requirements.some(
+      (req) => req.type === 'clan' && !state.player.clanIds.includes(req.clanId)
+    );
+    const shouldHide = hasUnmetStoryFlag || hasExceededMaxAge || hasUnmetClan;
+    cached.btn.style.display = shouldHide ? 'none' : '';
+
+    // Track visibility for section headers
+    if (!shouldHide) {
+      if (action.category === 'story') {
+        storyVisible = true;
+      } else {
+        actionsVisible = true;
+      }
+    }
 
     cached.btn.disabled = !canDo;
 
     if (!canDo && action.requirements.length > 0) {
       const unmet = action.requirements
-        .filter((req) => !isRequirementMet(req, state.skills, state.jobs, state.player.storyFlags, state.time.currentAge))
+        .filter((req) => !isRequirementMet(req, state.skills, state.jobs, state.player.storyFlags, state.time.currentAge, state.player.clanIds))
         .map(formatRequirement);
       if (unmet.length > 0) {
         setText(cached.reqEl, `Requires: ${unmet.join(', ')}`);
@@ -113,4 +165,8 @@ export function updateClickActionsPanel(): void {
       setText(cached.reqEl, '');
     }
   }
+
+  // Hide section headers if no visible actions
+  if (storySection) storySection.style.display = storyVisible ? '' : 'none';
+  if (actionsSection) actionsSection.style.display = actionsVisible ? '' : 'none';
 }

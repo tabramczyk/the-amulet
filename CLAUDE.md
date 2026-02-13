@@ -147,7 +147,7 @@ prompt pre-configured. Spawn agents with `subagent_type: "<agent-name>"` in the 
 | src/core/time.ts | Time conversion utilities |
 | src/systems/skill-system.ts | Skill XP and leveling |
 | src/systems/job-system.ts | Job progression |
-| src/systems/prestige-system.ts | Reincarnation bonuses |
+| src/systems/reincarnation-system.ts | Reincarnation bonuses |
 | src/systems/action-system.ts | Click + continuous actions |
 | src/data/skills.ts | Skill definitions |
 | src/data/jobs.ts | Job definitions |

@@ -41,12 +41,13 @@ Feature: Actions System
     Then "farming" should be the active job action
     And "train_concentration" should still be the active skill action
 
-  Scenario: Active actions persist across location change
+  Scenario: Active actions stop on location change
     Given the player is performing "begging" job action
     And the player is performing "train_concentration" skill action
     When the player changes location
-    Then "begging" should still be the active job action
-    And "train_concentration" should still be the active skill action
+    Then no job action should be active
+    And no skill action should be active
+    And isRunning should be false
 
   Scenario: Click action applies effects immediately
     Given a click action "talk_to_old_man" is available

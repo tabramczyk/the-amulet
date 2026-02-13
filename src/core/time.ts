@@ -6,7 +6,7 @@ export const TICK_INTERVAL_MS = 1000 / DAYS_PER_REAL_SECOND; // ~224ms
 export const MAX_TICKS_PER_FRAME = 10; // Cap to prevent spiral of death
 export const DAYS_PER_YEAR = 365;
 export const STARTING_AGE = 16;
-export const DEATH_THRESHOLD_AGE = 58;
+export const DEATH_THRESHOLD_AGE = 60;
 
 /**
  * Convert real elapsed milliseconds to game day ticks.

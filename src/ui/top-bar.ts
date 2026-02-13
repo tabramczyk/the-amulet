@@ -1,10 +1,8 @@
 import { store } from '../state/store';
 import { LOCATIONS } from '../data/locations';
-import { HOUSING_OPTIONS } from '../data/housing';
-import { FOOD_OPTIONS } from '../data/food';
-import { CONTINUOUS_ACTIONS } from '../data/actions';
 import { DAYS_PER_YEAR } from '../core/time';
 import { el, setText, formatNumber } from './dom-helpers';
+import { getDailyEarnings, getDailyExpenses } from '../systems/economy-system';
 
 let ageValue: HTMLElement;
 let dayValue: HTMLElement;
@@ -67,28 +65,13 @@ export function updateTopBar(): void {
   setText(locationLabel, loc?.name ?? state.player.currentLocationId);
 
   // Calculate daily balance
-  let earnings = 0;
-  for (const actionId of [state.player.activeJobActionId, state.player.activeSkillActionId]) {
-    if (actionId) {
-      const action = CONTINUOUS_ACTIONS[actionId];
-      if (action) {
-        earnings += action.effects
-          .filter((e): e is { type: 'addMoney'; amount: number } => e.type === 'addMoney')
-          .reduce((sum, e) => sum + e.amount, 0);
-      }
-    }
-  }
-  const housingCost = state.player.currentHousingId
-    ? (HOUSING_OPTIONS[state.player.currentHousingId]?.dailyCost ?? 0)
-    : 0;
-  const foodCost = state.player.currentFoodId
-    ? (FOOD_OPTIONS[state.player.currentFoodId]?.dailyCost ?? 0)
-    : 0;
-  const net = earnings - housingCost - foodCost;
+  const earnings = getDailyEarnings(state.player.activeJobActionId, state.player.activeSkillActionId, state.jobs, state.skills);
+  const expenses = getDailyExpenses(state.player.currentHousingId, state.player.currentFoodId);
+  const net = earnings - expenses;
   const sign = net >= 0 ? '+' : '';
   setText(balanceValue, `${sign}${net} gold/day`);
   balanceValue.className = net >= 0 ? 'top-bar__value top-bar__value--positive' : 'top-bar__value top-bar__value--negative';
 
-  const lives = state.prestige.livesLived;
-  setText(livesLabel, lives > 0 ? `Lives: ${lives}` : '');
+  const lives = state.reincarnation.livesLived;
+  setText(livesLabel, `Life: ${lives + 1}`);
 }

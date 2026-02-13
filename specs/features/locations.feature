@@ -22,11 +22,11 @@ Feature: Locations System
     When the player travels to "fields"
     Then no continuous action should be active
 
-  Scenario: Location requires skill level
-    Given the player has "strength" at level 15
+  Scenario: Location requires job level
+    Given the player has "farmer" job at level 3
     When the player tries to travel to "village"
     Then travel should be unavailable
-    Because "village" requires Strength 20 or Farmer level 5
+    Because "village" requires Farmer level 5
 
   Scenario: Location unlocks when requirements met
     Given the player has "beggar" job at level 5

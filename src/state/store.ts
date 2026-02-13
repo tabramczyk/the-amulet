@@ -7,7 +7,7 @@ import {
   type PlayerState,
   type SkillState,
   type JobState,
-  type PrestigeState,
+  type ReincarnationState,
 } from '../../specs/schemas';
 import { SKILLS } from '../data/skills';
 import { JOBS } from '../data/jobs';
@@ -33,20 +33,22 @@ function createInitialJobStates(): JobState[] {
   }));
 }
 
-function createInitialPrestigeState(): PrestigeState {
+function createInitialReincarnationState(): ReincarnationState {
   return {
     livesLived: 0,
     totalDaysAllLives: 0,
-    skillPrestige: Object.keys(SKILLS).map((skillId) => ({
+    skillBonuses: Object.keys(SKILLS).map((skillId) => ({
       skillId,
       totalLevelsAllLives: 0,
     })),
-    jobPrestige: Object.keys(JOBS).map((jobId) => ({
+    jobBonuses: Object.keys(JOBS).map((jobId) => ({
       jobId,
       totalLevelsAllLives: 0,
     })),
   };
 }
+
+const INITIAL_MESSAGE = "You've been walking the Slums when you found a strange looking amulet.";
 
 function createInitialPlayerState(): PlayerState {
   return {
@@ -58,6 +60,9 @@ function createInitialPlayerState(): PlayerState {
     currentHousingId: null,
     currentFoodId: null,
     storyFlags: {},
+    clanIds: [],
+    messageLog: [INITIAL_MESSAGE],
+    pendingRelocation: null,
   };
 }
 
@@ -68,7 +73,7 @@ export function createInitialGameState(): GameState {
     player: createInitialPlayerState(),
     skills: createInitialSkillStates(),
     jobs: createInitialJobStates(),
-    prestige: createInitialPrestigeState(),
+    reincarnation: createInitialReincarnationState(),
     isRunning: false,
     isAlive: true,
   };
@@ -83,6 +88,7 @@ export interface GameActions {
   updateJob: (jobId: string, updates: Partial<JobState>) => void;
   advanceDays: (days: number) => void;
   setRunning: (running: boolean) => void;
+  addMessage: (message: string) => void;
   resetForReincarnation: () => void;
   resetGame: () => void;
 }
@@ -135,18 +141,30 @@ export const store = createStore<GameStore>()(
 
       setRunning: (running) => set({ isRunning: running }),
 
+      addMessage: (message) =>
+        set((state) => ({
+          player: {
+            ...state.player,
+            messageLog: [...state.player.messageLog, message],
+          },
+        })),
+
       resetForReincarnation: () =>
         set((state) => ({
           time: createInitialTimeState(),
-          player: createInitialPlayerState(),
+          player: {
+            ...createInitialPlayerState(),
+            storyFlags: { intro_complete: true },
+            messageLog: [INITIAL_MESSAGE],
+          },
           skills: createInitialSkillStates(),
           jobs: createInitialJobStates(),
-          prestige: {
-            ...state.prestige,
-            livesLived: state.prestige.livesLived + 1,
+          reincarnation: {
+            ...state.reincarnation,
+            livesLived: state.reincarnation.livesLived + 1,
             totalDaysAllLives:
-              state.prestige.totalDaysAllLives + state.time.currentDay,
-            skillPrestige: state.prestige.skillPrestige.map((sp) => {
+              state.reincarnation.totalDaysAllLives + state.time.currentDay,
+            skillBonuses: state.reincarnation.skillBonuses.map((sp) => {
               const currentSkill = state.skills.find(
                 (s) => s.skillId === sp.skillId,
               );
@@ -156,7 +174,7 @@ export const store = createStore<GameStore>()(
                   sp.totalLevelsAllLives + (currentSkill?.level ?? 0),
               };
             }),
-            jobPrestige: state.prestige.jobPrestige.map((jp) => {
+            jobBonuses: state.reincarnation.jobBonuses.map((jp) => {
               const currentJob = state.jobs.find(
                 (j) => j.jobId === jp.jobId,
               );

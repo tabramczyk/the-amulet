@@ -8,6 +8,7 @@ export const FoodOptionSchema = z.object({
   description: z.string(),
   dailyCost: z.number().min(0),
   xpBonusPercent: z.number().min(0),
+  locationId: z.string().optional(),
 });
 
 export type FoodOption = z.infer<typeof FoodOptionSchema>;

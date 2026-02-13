@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { SkillStateSchema, SkillPrestigeSchema } from './skill.schema';
-import { JobStateSchema, JobPrestigeSchema } from './job.schema';
+import { SkillStateSchema, SkillReincarnationBonusSchema } from './skill.schema';
+import { JobStateSchema, JobReincarnationBonusSchema } from './job.schema';
 
 // --- Time State ---
 
@@ -23,20 +23,27 @@ export const PlayerStateSchema = z.object({
   currentHousingId: z.string().nullable(),
   currentFoodId: z.string().nullable(),
   storyFlags: z.record(z.string(), z.boolean()),
+  clanIds: z.array(z.string()).default([]),
+  messageLog: z.array(z.string()).default([]),
+  pendingRelocation: z.object({
+    targetDay: z.number().int().min(0),
+    targetLocationId: z.string().min(1),
+    message: z.string().optional(),
+  }).nullable().default(null),
 });
 
 export type PlayerState = z.infer<typeof PlayerStateSchema>;
 
-// --- Prestige State ---
+// --- Reincarnation State ---
 
-export const PrestigeStateSchema = z.object({
+export const ReincarnationStateSchema = z.object({
   livesLived: z.number().int().min(0),
   totalDaysAllLives: z.number().int().min(0),
-  skillPrestige: z.array(SkillPrestigeSchema),
-  jobPrestige: z.array(JobPrestigeSchema),
+  skillBonuses: z.array(SkillReincarnationBonusSchema),
+  jobBonuses: z.array(JobReincarnationBonusSchema),
 });
 
-export type PrestigeState = z.infer<typeof PrestigeStateSchema>;
+export type ReincarnationState = z.infer<typeof ReincarnationStateSchema>;
 
 // --- Full Game State ---
 
@@ -46,7 +53,7 @@ export const GameStateSchema = z.object({
   player: PlayerStateSchema,
   skills: z.array(SkillStateSchema),
   jobs: z.array(JobStateSchema),
-  prestige: PrestigeStateSchema,
+  reincarnation: ReincarnationStateSchema,
   isRunning: z.boolean(),
   isAlive: z.boolean(),
 });

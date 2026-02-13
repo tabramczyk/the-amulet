@@ -1,10 +1,10 @@
-import type { SkillState, SkillPrestige } from '../../specs/schemas';
+import type { SkillState, SkillReincarnationBonus } from '../../specs/schemas';
 import { SKILLS } from '../data/skills';
 
 const BASE_XP_PER_LEVEL = 10;
 const SOFT_CAP_MULTIPLIER = 0.1;
 const CONCENTRATION_BONUS_PER_LEVEL = 0.01;
-const PRESTIGE_BONUS_PER_LEVEL = 0.01;
+const REINCARNATION_BONUS_PER_LEVEL = 0.01;
 
 /**
  * Calculate XP required for the next level.
@@ -22,25 +22,25 @@ export function getConcentrationBonus(concentrationLevel: number): number {
 }
 
 /**
- * Calculate the prestige bonus multiplier for a skill.
+ * Calculate the reincarnation bonus multiplier for a skill.
  */
-export function getPrestigeBonus(totalLevelsAllLives: number): number {
-  return 1 + totalLevelsAllLives * PRESTIGE_BONUS_PER_LEVEL;
+export function getReincarnationBonus(totalLevelsAllLives: number): number {
+  return 1 + totalLevelsAllLives * REINCARNATION_BONUS_PER_LEVEL;
 }
 
 /**
- * Calculate effective XP gain for a skill, applying concentration, prestige, and soft cap.
+ * Calculate effective XP gain for a skill, applying concentration, reincarnation bonus, and soft cap.
  */
 export function calculateEffectiveXp(
   baseXp: number,
   currentLevel: number,
   softCap: number,
   concentrationLevel: number,
-  totalPrestigeLevels: number,
+  totalReincarnationLevels: number,
 ): number {
   let effective = baseXp;
   effective *= getConcentrationBonus(concentrationLevel);
-  effective *= getPrestigeBonus(totalPrestigeLevels);
+  effective *= getReincarnationBonus(totalReincarnationLevels);
   if (currentLevel >= softCap) {
     effective *= SOFT_CAP_MULTIPLIER;
   }
@@ -55,18 +55,18 @@ export function processSkillXpGain(
   skill: SkillState,
   xpAmount: number,
   concentrationLevel: number,
-  prestigeData: SkillPrestige | undefined,
+  reincarnationData: SkillReincarnationBonus | undefined,
 ): SkillState {
   const skillDef = SKILLS[skill.skillId];
   if (!skillDef) return skill;
 
-  const totalPrestigeLevels = prestigeData?.totalLevelsAllLives ?? 0;
+  const totalReincarnationLevels = reincarnationData?.totalLevelsAllLives ?? 0;
   const effectiveXp = calculateEffectiveXp(
     xpAmount,
     skill.level,
     skillDef.softCap,
     concentrationLevel,
-    totalPrestigeLevels,
+    totalReincarnationLevels,
   );
 
   let newXp = skill.xp + effectiveXp;

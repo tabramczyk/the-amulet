@@ -7,6 +7,7 @@ import {
   ClickActionSchema,
   HousingOptionSchema,
   FoodOptionSchema,
+  ClanSchema,
 } from '../../specs/schemas';
 import { SKILLS } from '../../src/data/skills';
 import { JOBS } from '../../src/data/jobs';
@@ -14,6 +15,7 @@ import { LOCATIONS } from '../../src/data/locations';
 import { CONTINUOUS_ACTIONS, CLICK_ACTIONS } from '../../src/data/actions';
 import { HOUSING_OPTIONS } from '../../src/data/housing';
 import { FOOD_OPTIONS } from '../../src/data/food';
+import { CLANS } from '../../src/data/clans';
 
 describe('Data Validation', () => {
   describe('Skills', () => {
@@ -50,6 +52,11 @@ describe('Data Validation', () => {
       expect(JOBS['laborer']).toBeDefined();
     });
 
+    it('should have soldier and robbery jobs', () => {
+      expect(JOBS['soldier']).toBeDefined();
+      expect(JOBS['robbery']).toBeDefined();
+    });
+
     it('should reference valid locations', () => {
       for (const job of Object.values(JOBS)) {
         expect(LOCATIONS[job.locationId]).toBeDefined();
@@ -82,6 +89,12 @@ describe('Data Validation', () => {
       expect(LOCATIONS['slums']).toBeDefined();
       expect(LOCATIONS['fields']).toBeDefined();
       expect(LOCATIONS['village']).toBeDefined();
+      expect(LOCATIONS['death_gate']).toBeDefined();
+    });
+
+    it('should have barracks and bandit_hideout locations', () => {
+      expect(LOCATIONS['barracks']).toBeDefined();
+      expect(LOCATIONS['bandit_hideout']).toBeDefined();
     });
 
     it('should reference valid jobs', () => {
@@ -151,6 +164,10 @@ describe('Data Validation', () => {
         expect(LOCATIONS[housing.locationId]).toBeDefined();
       }
     });
+
+    it('should have prison_cell', () => {
+      expect(HOUSING_OPTIONS['prison_cell']).toBeDefined();
+    });
   });
 
   describe('Food Options', () => {
@@ -165,5 +182,33 @@ describe('Data Validation', () => {
         expect(result.success).toBe(true);
       },
     );
+
+    it('should have prison_food', () => {
+      expect(FOOD_OPTIONS['prison_food']).toBeDefined();
+    });
+
+    it('should reference valid locations for location-specific food', () => {
+      for (const food of Object.values(FOOD_OPTIONS)) {
+        if (food.locationId) {
+          expect(LOCATIONS[food.locationId]).toBeDefined();
+        }
+      }
+    });
+  });
+
+  describe('Clans', () => {
+    it('should have at least 1 clan defined', () => {
+      expect(Object.keys(CLANS).length).toBeGreaterThan(0);
+    });
+
+    it.each(Object.entries(CLANS))('clan "%s" should match ClanSchema', (_id, clan) => {
+      const result = ClanSchema.safeParse(clan);
+      expect(result.success).toBe(true);
+    });
+
+    it('should have army and bandits clans', () => {
+      expect(CLANS['army']).toBeDefined();
+      expect(CLANS['bandits']).toBeDefined();
+    });
   });
 });

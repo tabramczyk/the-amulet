@@ -106,6 +106,7 @@ describe('Life Cycle System', () => {
       expect(result.isRunning).toBe(false);
       expect(result.player.activeJobActionId).toBeNull();
       expect(result.player.activeSkillActionId).toBeNull();
+      expect(result.player.currentLocationId).toBe('death_gate');
     });
   });
 
@@ -154,10 +155,10 @@ describe('Life Cycle System', () => {
           money: 100,
         },
       });
-      // begging earns 1 money, tent costs 1, scraps costs 1
-      // net: 100 + 1 (earn) - 2 (expenses) = 99
+      // begging earns 1 money, tent costs 2, scraps costs 1
+      // net: 100 + 1 (earn) - 3 (expenses) = 98
       const result = processSingleTick(state);
-      expect(result.player.money).toBe(99);
+      expect(result.player.money).toBe(98);
     });
 
     it('should evict when money runs out', () => {
@@ -214,7 +215,7 @@ describe('Life Cycle System', () => {
       expect(result.player.currentLocationId).toBe('fields');
     });
 
-    it('should preserve active actions on location change', () => {
+    it('should clear active actions on location change', () => {
       const state = makeState({
         player: {
           ...createInitialGameState().player,
@@ -226,8 +227,9 @@ describe('Life Cycle System', () => {
         { type: 'changeLocation', locationId: 'fields' },
       ];
       const result = applyClickActionEffects(state, effects, 3);
-      expect(result.player.activeJobActionId).toBe('begging');
-      expect(result.player.activeSkillActionId).toBe('train_concentration');
+      expect(result.player.activeJobActionId).toBeNull();
+      expect(result.player.activeSkillActionId).toBeNull();
+      expect(result.isRunning).toBe(false);
     });
 
     it('should preserve housing on location change', () => {
@@ -281,6 +283,140 @@ describe('Life Cycle System', () => {
       expect(result.player.money).toBe(25);
       expect(result.player.storyFlags['test']).toBe(true);
       expect(result.time.currentDay).toBe(1);
+    });
+  });
+
+  describe('joinClan and clearPendingRelocation effects', () => {
+    it('should add clan to player clanIds via joinClan effect', () => {
+      const state = makeState();
+      const effects: ActionEffect[] = [
+        { type: 'joinClan', clanId: 'army' },
+      ];
+      const result = applyClickActionEffects(state, effects, 0);
+      expect(result.player.clanIds).toContain('army');
+    });
+
+    it('should not duplicate clan in clanIds', () => {
+      const state = makeState({
+        player: {
+          ...createInitialGameState().player,
+          clanIds: ['army'],
+        },
+      });
+      const effects: ActionEffect[] = [
+        { type: 'joinClan', clanId: 'army' },
+      ];
+      const result = applyClickActionEffects(state, effects, 0);
+      expect(result.player.clanIds.filter((c: string) => c === 'army').length).toBe(1);
+    });
+
+    it('should clear pending relocation via clearPendingRelocation effect', () => {
+      const state = makeState({
+        player: {
+          ...createInitialGameState().player,
+          pendingRelocation: {
+            targetDay: 100,
+            targetLocationId: 'slums',
+            message: 'test',
+          },
+        },
+      });
+      const effects: ActionEffect[] = [
+        { type: 'clearPendingRelocation' },
+      ];
+      const result = applyClickActionEffects(state, effects, 0);
+      expect(result.player.pendingRelocation).toBeNull();
+    });
+  });
+
+  describe('prison food and housing', () => {
+    it('should auto-set prison food and housing when entering prison', () => {
+      const state = makeState();
+      const effects: ActionEffect[] = [
+        { type: 'changeLocation', locationId: 'prison' },
+      ];
+      const result = applyClickActionEffects(state, effects, 0);
+      expect(result.player.currentLocationId).toBe('prison');
+      expect(result.player.currentFoodId).toBe('prison_food');
+      expect(result.player.currentHousingId).toBe('prison_cell');
+    });
+
+    it('should not set prison food/housing for non-prison locations', () => {
+      const state = makeState();
+      const effects: ActionEffect[] = [
+        { type: 'changeLocation', locationId: 'fields' },
+      ];
+      const result = applyClickActionEffects(state, effects, 0);
+      expect(result.player.currentFoodId).toBeNull();
+      expect(result.player.currentHousingId).toBeNull();
+    });
+
+    it('should clear food and housing when released from prison via pendingRelocation', () => {
+      const state = makeState({
+        player: {
+          ...createInitialGameState().player,
+          activeJobActionId: 'prison_meditate',
+          activeSkillActionId: 'prison_train_strength',
+          currentLocationId: 'prison',
+          currentFoodId: 'prison_food',
+          currentHousingId: 'prison_cell',
+          pendingRelocation: {
+            targetDay: 1,
+            targetLocationId: 'slums',
+            message: "I'm finally free.",
+          },
+        },
+      });
+      const result = processSingleTick(state);
+      expect(result.player.currentLocationId).toBe('slums');
+      expect(result.player.currentFoodId).toBeNull();
+      expect(result.player.currentHousingId).toBeNull();
+    });
+  });
+
+  describe('wageBonusSkills in tick processing', () => {
+    it('should add wage bonus from skills during tick processing', () => {
+      const state = makeState({
+        player: {
+          ...createInitialGameState().player,
+          activeJobActionId: 'soldiering',
+        },
+        skills: createInitialGameState().skills.map((s) =>
+          s.skillId === 'strength' ? { ...s, level: 10 } : s,
+        ),
+      });
+      // soldiering gives 4 money + soldier has wageBonusSkills: [{ skillId: 'strength', bonusPerLevel: 0.1 }]
+      // bonus = Math.floor(10 * 0.1) = 1
+      // total = 4 + 1 = 5
+      const result = processSingleTick(state);
+      expect(result.player.money).toBe(5);
+    });
+
+    it('should not add wage bonus when skill level is 0', () => {
+      const state = makeState({
+        player: {
+          ...createInitialGameState().player,
+          activeJobActionId: 'soldiering',
+        },
+      });
+      // soldiering gives 4 money, no wage bonus (strength level 0)
+      const result = processSingleTick(state);
+      expect(result.player.money).toBe(4);
+    });
+
+    it('should not add wage bonus for jobs without wageBonusSkills', () => {
+      const state = makeState({
+        player: {
+          ...createInitialGameState().player,
+          activeJobActionId: 'begging',
+        },
+        skills: createInitialGameState().skills.map((s) =>
+          s.skillId === 'strength' ? { ...s, level: 10 } : s,
+        ),
+      });
+      // begging gives 1 money, no wageBonusSkills
+      const result = processSingleTick(state);
+      expect(result.player.money).toBe(1);
     });
   });
 });

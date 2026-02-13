@@ -13,6 +13,7 @@ Feature: Life Cycle
     Given the player is age 58
     When the player reaches the death threshold age
     Then the "amulet_glowing" story flag should be set
+    And the player should be in "death_gate"
     And all normal actions should be disabled
     And the "Touch the Amulet" action should be available
 
@@ -20,7 +21,7 @@ Feature: Life Cycle
     Given the "amulet_glowing" story flag is set
     When the player performs "touch_amulet" action
     Then the player should reincarnate
-    And prestige bonuses should be applied
+    And reincarnation bonuses should be applied
     And the player should be age 16
 
   Scenario: Full life cycle completes
@@ -28,7 +29,7 @@ Feature: Life Cycle
     When the player plays through an entire life
     And the player touches the amulet
     Then the player should be in a new life
-    And prestige bonuses from the previous life should be active
+    And reincarnation bonuses from the previous life should be active
 
   Scenario: Save and load preserves state
     Given the player has been playing for some time

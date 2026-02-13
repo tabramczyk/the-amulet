@@ -47,7 +47,7 @@ describe('Life Cycle Integration', () => {
 
     it('should start with 0 lives lived', () => {
       const state = getInitialState();
-      expect(state.prestige.livesLived).toBe(0);
+      expect(state.reincarnation.livesLived).toBe(0);
     });
 
     it('should have all skills at level 0', () => {
@@ -96,19 +96,19 @@ describe('Life Cycle Integration', () => {
       expect(result.xp).toBeCloseTo(1.1, 5);
     });
 
-    it('should apply prestige bonus to skill XP gain', () => {
+    it('should apply reincarnation bonus to skill XP gain', () => {
       const state = getInitialState();
       const strengthState = state.skills.find((s) => s.skillId === 'strength');
       expect(strengthState).toBeDefined();
 
-      const prestigeData = { skillId: 'strength', totalLevelsAllLives: 20 };
-      const result = processSkillXpGain(strengthState ?? { skillId: 'strength', level: 0, xp: 0, xpToNextLevel: 10 }, 1, 0, prestigeData);
+      const reincarnationData = { skillId: 'strength', totalLevelsAllLives: 20 };
+      const result = processSkillXpGain(strengthState ?? { skillId: 'strength', level: 0, xp: 0, xpToNextLevel: 10 }, 1, 0, reincarnationData);
 
-      // 1 base * 1.0 conc * 1.20 prestige = 1.2
+      // 1 base * 1.0 conc * 1.20 reincarnation = 1.2
       expect(result.xp).toBeCloseTo(1.2, 5);
     });
 
-    it('should apply both concentration and prestige bonuses', () => {
+    it('should apply both concentration and reincarnation bonuses', () => {
       const strengthDef = SKILLS['strength'];
       expect(strengthDef).toBeDefined();
       if (!strengthDef) return;
@@ -153,13 +153,13 @@ describe('Life Cycle Integration', () => {
   });
 
   describe('Job XP with bonuses integration', () => {
-    it('should apply prestige bonus to job XP gain', () => {
+    it('should apply reincarnation bonus to job XP gain', () => {
       const state = getInitialState();
       const beggarState = state.jobs.find((j) => j.jobId === 'beggar');
       expect(beggarState).toBeDefined();
 
-      const prestigeData = { jobId: 'beggar', totalLevelsAllLives: 15 };
-      const result = processJobXpGain(beggarState ?? { jobId: 'beggar', level: 0, xp: 0, xpToNextLevel: 10 }, 1, prestigeData);
+      const reincarnationData = { jobId: 'beggar', totalLevelsAllLives: 15 };
+      const result = processJobXpGain(beggarState ?? { jobId: 'beggar', level: 0, xp: 0, xpToNextLevel: 10 }, 1, reincarnationData);
 
       // 1 * 1.15 = 1.15
       expect(result.xp).toBeCloseTo(1.15, 5);
@@ -201,19 +201,22 @@ describe('Life Cycle Integration', () => {
       expect(areJobRequirementsMet('farmer', 'fields', state.skills, jobs)).toBe(true);
     });
 
-    it('should block laborer without strength level 40', () => {
+    it('should block laborer without strength 10 and farmer 10', () => {
       const state = getInitialState();
       expect(
         areJobRequirementsMet('laborer', 'village', state.skills, state.jobs),
       ).toBe(false);
     });
 
-    it('should allow laborer with strength 40 in village', () => {
+    it('should allow laborer with strength 10 and farmer 10 in village', () => {
       const state = getInitialState();
       const skills = state.skills.map((s) =>
-        s.skillId === 'strength' ? { ...s, level: 40 } : s,
+        s.skillId === 'strength' ? { ...s, level: 10 } : s,
       );
-      expect(areJobRequirementsMet('laborer', 'village', skills, state.jobs)).toBe(true);
+      const jobs = state.jobs.map((j) =>
+        j.jobId === 'farmer' ? { ...j, level: 10 } : j,
+      );
+      expect(areJobRequirementsMet('laborer', 'village', skills, jobs)).toBe(true);
     });
 
     it('should block fields without beggar level 5', () => {
@@ -231,31 +234,38 @@ describe('Life Cycle Integration', () => {
       expect(areLocationRequirementsMet('fields', state.skills, jobs)).toBe(true);
     });
 
-    it('should block village without strength level 20', () => {
+    it('should block village without farmer level 5', () => {
       const state = getInitialState();
       expect(
         areLocationRequirementsMet('village', state.skills, state.jobs),
       ).toBe(false);
     });
 
-    it('should allow village with strength 20', () => {
+    it('should allow village with farmer level 5', () => {
       const state = getInitialState();
-      const skills = state.skills.map((s) =>
-        s.skillId === 'strength' ? { ...s, level: 20 } : s,
+      const jobs = state.jobs.map((j) =>
+        j.jobId === 'farmer' ? { ...j, level: 5 } : j,
       );
-      expect(areLocationRequirementsMet('village', skills, state.jobs)).toBe(true);
+      expect(areLocationRequirementsMet('village', state.skills, jobs)).toBe(true);
     });
   });
 
   describe('Action availability integration', () => {
     it('should show begging and training actions in slums', () => {
       const state = getInitialState();
+      const stateWithIntro = {
+        ...state,
+        player: {
+          ...state.player,
+          storyFlags: { intro_complete: true },
+        },
+      };
       const actions = getAvailableContinuousActions(
         'slums',
-        state.skills,
-        state.jobs,
-        state.player.storyFlags,
-        state.time.currentAge,
+        stateWithIntro.skills,
+        stateWithIntro.jobs,
+        stateWithIntro.player.storyFlags,
+        stateWithIntro.time.currentAge,
       );
       const actionIds = actions.map((a) => a.id);
       expect(actionIds).toContain('begging');
@@ -280,7 +290,7 @@ describe('Life Cycle Integration', () => {
       const state = getInitialState();
       const flags = { ...state.player.storyFlags, amulet_glowing: true };
       const actions = getAvailableClickActions(
-        'slums',
+        'death_gate',
         state.skills,
         state.jobs,
         flags,
@@ -308,11 +318,12 @@ describe('Life Cycle Integration', () => {
       const jobs = state.jobs.map((j) =>
         j.jobId === 'beggar' ? { ...j, level: 5 } : j,
       );
+      const storyFlags = { intro_complete: true };
       const actions = getAvailableClickActions(
         'slums',
         state.skills,
         jobs,
-        state.player.storyFlags,
+        storyFlags,
         state.time.currentAge,
       );
       const actionIds = actions.map((a) => a.id);
@@ -336,7 +347,7 @@ describe('Life Cycle Integration', () => {
       expect(result.time.currentDay).toBe(3); // travel_to_fields costs 3 days
     });
 
-    it('should preserve active actions on location change', () => {
+    it('should clear active actions on location change', () => {
       const state: GameState = {
         ...getInitialState(),
         player: {
@@ -355,8 +366,9 @@ describe('Life Cycle Integration', () => {
         travelAction.timeCostDays,
       );
 
-      expect(result.player.activeJobActionId).toBe('begging');
-      expect(result.player.activeSkillActionId).toBe('train_concentration');
+      expect(result.player.activeJobActionId).toBeNull();
+      expect(result.player.activeSkillActionId).toBeNull();
+      expect(result.isRunning).toBe(false);
     });
 
     it('should trigger reincarnation flag via touch_amulet', () => {
@@ -396,9 +408,9 @@ describe('Life Cycle Integration', () => {
         isAlive: true,
       };
 
-      // begging earns 1/tick, tent costs 1/tick => net 0/tick
+      // begging earns 1/tick, tent costs 2/tick => net -1/tick
       state = processMultipleTicks(state, 10);
-      expect(state.player.money).toBe(50); // no net change
+      expect(state.player.money).toBe(40); // 50 + 10 - 20 = 40
     });
 
     it('should evict when player cannot afford expenses', () => {
@@ -448,8 +460,8 @@ describe('Life Cycle Integration', () => {
     });
   });
 
-  describe('Reincarnation and prestige integration', () => {
-    it('should preserve prestige bonuses after reincarnation', () => {
+  describe('Reincarnation and bonuses integration', () => {
+    it('should preserve reincarnation bonuses after reincarnation', () => {
       // Setup: player has gained some levels
       store.getState().updateSkill('concentration', { level: 10 });
       store.getState().updateSkill('strength', { level: 15 });
@@ -461,31 +473,31 @@ describe('Life Cycle Integration', () => {
 
       const state = store.getState();
 
-      // Prestige should be accumulated
-      const concPrestige = state.prestige.skillPrestige.find(
+      // Reincarnation bonuses should be accumulated
+      const concBonus = state.reincarnation.skillBonuses.find(
         (sp) => sp.skillId === 'concentration',
       );
-      expect(concPrestige).toBeDefined();
-      expect(concPrestige?.totalLevelsAllLives).toBe(10);
+      expect(concBonus).toBeDefined();
+      expect(concBonus?.totalLevelsAllLives).toBe(10);
 
-      const strPrestige = state.prestige.skillPrestige.find(
+      const strBonus = state.reincarnation.skillBonuses.find(
         (sp) => sp.skillId === 'strength',
       );
-      expect(strPrestige).toBeDefined();
-      expect(strPrestige?.totalLevelsAllLives).toBe(15);
+      expect(strBonus).toBeDefined();
+      expect(strBonus?.totalLevelsAllLives).toBe(15);
 
-      const begPrestige = state.prestige.jobPrestige.find(
+      const begBonus = state.reincarnation.jobBonuses.find(
         (jp) => jp.jobId === 'beggar',
       );
-      expect(begPrestige).toBeDefined();
-      expect(begPrestige?.totalLevelsAllLives).toBe(20);
+      expect(begBonus).toBeDefined();
+      expect(begBonus?.totalLevelsAllLives).toBe(20);
 
       // State should be reset
       expect(state.time.currentDay).toBe(0);
       expect(state.time.currentAge).toBe(STARTING_AGE);
       expect(state.player.money).toBe(0);
       expect(state.player.currentLocationId).toBe('slums');
-      expect(state.prestige.livesLived).toBe(1);
+      expect(state.reincarnation.livesLived).toBe(1);
 
       // All levels should be 0
       for (const skill of state.skills) {
@@ -498,7 +510,7 @@ describe('Life Cycle Integration', () => {
       }
     });
 
-    it('should stack prestige across multiple lives', () => {
+    it('should stack reincarnation bonuses across multiple lives', () => {
       // Life 1
       store.getState().updateSkill('strength', { level: 15 });
       store.getState().resetForReincarnation();
@@ -508,12 +520,12 @@ describe('Life Cycle Integration', () => {
       store.getState().resetForReincarnation();
 
       const state = store.getState();
-      const strPrestige = state.prestige.skillPrestige.find(
+      const strBonus = state.reincarnation.skillBonuses.find(
         (sp) => sp.skillId === 'strength',
       );
-      expect(strPrestige).toBeDefined();
-      expect(strPrestige?.totalLevelsAllLives).toBe(27);
-      expect(state.prestige.livesLived).toBe(2);
+      expect(strBonus).toBeDefined();
+      expect(strBonus?.totalLevelsAllLives).toBe(27);
+      expect(state.reincarnation.livesLived).toBe(2);
     });
 
     it('should give XP bonus in new life after reincarnation', () => {
@@ -522,7 +534,7 @@ describe('Life Cycle Integration', () => {
       store.getState().resetForReincarnation();
 
       const stateAfterReinc = store.getState();
-      const strPrestige = stateAfterReinc.prestige.skillPrestige.find(
+      const strBonus = stateAfterReinc.reincarnation.skillBonuses.find(
         (sp) => sp.skillId === 'strength',
       );
 
@@ -533,10 +545,10 @@ describe('Life Cycle Integration', () => {
         strengthState ?? { skillId: 'strength', level: 0, xp: 0, xpToNextLevel: 10 },
         1, // base XP
         0, // no concentration
-        strPrestige,
+        strBonus,
       );
 
-      // 1 base * 1.0 conc * 1.20 prestige = 1.2
+      // 1 base * 1.0 conc * 1.20 reincarnation = 1.2
       expect(result.xp).toBeCloseTo(1.2, 5);
     });
 
@@ -589,14 +601,14 @@ describe('Life Cycle Integration', () => {
       expect(afterReinc.time.currentAge).toBe(STARTING_AGE);
       expect(afterReinc.player.currentLocationId).toBe('slums');
       expect(afterReinc.player.money).toBe(0);
-      expect(afterReinc.prestige.livesLived).toBe(1);
+      expect(afterReinc.reincarnation.livesLived).toBe(1);
 
-      // Prestige should be accumulated from the life
-      const begPrestige = afterReinc.prestige.jobPrestige.find(
+      // Reincarnation bonuses should be accumulated from the life
+      const begBonus = afterReinc.reincarnation.jobBonuses.find(
         (jp) => jp.jobId === 'beggar',
       );
-      expect(begPrestige).toBeDefined();
-      expect(begPrestige?.totalLevelsAllLives).toBeGreaterThan(0);
+      expect(begBonus).toBeDefined();
+      expect(begBonus?.totalLevelsAllLives).toBeGreaterThan(0);
 
       // Should be valid state
       const result = GameStateSchema.safeParse(afterReinc);

@@ -8,6 +8,7 @@ export function areLocationRequirementsMet(
   locationId: string,
   skills: SkillState[],
   jobs: JobState[],
+  clanIds: string[] = [],
 ): boolean {
   const location = LOCATIONS[locationId];
   if (!location) return false;
@@ -23,6 +24,8 @@ export function areLocationRequirementsMet(
     } else if (req.type === 'job') {
       const job = jobs.find((j) => j.jobId === req.jobId);
       if (!job || job.level < req.level) return false;
+    } else if (req.type === 'clan') {
+      if (!clanIds.includes(req.clanId)) return false;
     }
   }
 

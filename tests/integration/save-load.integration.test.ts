@@ -25,9 +25,9 @@ describe('Save/Load Integration', () => {
       state.jobs = state.jobs.map((j) =>
         j.jobId === 'beggar' ? { ...j, level: 15, xp: 20 } : j,
       );
-      state.prestige.livesLived = 2;
-      state.prestige.totalDaysAllLives = 30000;
-      state.prestige.skillPrestige = state.prestige.skillPrestige.map((sp) =>
+      state.reincarnation.livesLived = 2;
+      state.reincarnation.totalDaysAllLives = 30000;
+      state.reincarnation.skillBonuses = state.reincarnation.skillBonuses.map((sp) =>
         sp.skillId === 'strength'
           ? { ...sp, totalLevelsAllLives: 25 }
           : sp,
@@ -125,7 +125,7 @@ describe('Save/Load Integration', () => {
         expect(result.data.player.currentLocationId).toBe(state.player.currentLocationId);
         expect(result.data.skills.length).toBe(state.skills.length);
         expect(result.data.jobs.length).toBe(state.jobs.length);
-        expect(result.data.prestige.livesLived).toBe(state.prestige.livesLived);
+        expect(result.data.reincarnation.livesLived).toBe(state.reincarnation.livesLived);
       }
     });
 
@@ -134,7 +134,7 @@ describe('Save/Load Integration', () => {
       state.time.currentDay = 5000;
       state.time.currentAge = 29;
       state.player.money = 1500;
-      state.prestige.livesLived = 5;
+      state.reincarnation.livesLived = 5;
 
       const serialized = JSON.stringify(state);
       const deserialized = JSON.parse(serialized);
@@ -144,7 +144,7 @@ describe('Save/Load Integration', () => {
       if (result.success) {
         expect(result.data.time.currentDay).toBe(5000);
         expect(result.data.player.money).toBe(1500);
-        expect(result.data.prestige.livesLived).toBe(5);
+        expect(result.data.reincarnation.livesLived).toBe(5);
       }
     });
   });
@@ -190,9 +190,9 @@ describe('Save/Load Integration', () => {
       expect(result.success).toBe(false);
     });
 
-    it('should fail validation when prestige has negative lives', () => {
+    it('should fail validation when reincarnation has negative lives', () => {
       const state = createInitialGameState();
-      state.prestige.livesLived = -1;
+      state.reincarnation.livesLived = -1;
       const result = GameStateSchema.safeParse(state);
       expect(result.success).toBe(false);
     });

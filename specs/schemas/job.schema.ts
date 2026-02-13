@@ -27,6 +27,7 @@ export const JobSchema = z.object({
   requirements: JobRequirementsSchema,
   xpPerTick: z.number().positive(),
   moneyPerTick: z.number().min(0),
+  wageBonusSkills: z.array(z.object({ skillId: z.string(), bonusPerLevel: z.number() })).default([]),
 });
 
 export type Job = z.infer<typeof JobSchema>;
@@ -45,11 +46,11 @@ export const JobStateSchema = z.object({
 
 export type JobState = z.infer<typeof JobStateSchema>;
 
-// --- Job Prestige Data ---
+// --- Job Reincarnation Bonus Data ---
 
-export const JobPrestigeSchema = z.object({
+export const JobReincarnationBonusSchema = z.object({
   jobId: z.string().min(1),
   totalLevelsAllLives: z.number().int().min(0),
 });
 
-export type JobPrestige = z.infer<typeof JobPrestigeSchema>;
+export type JobReincarnationBonus = z.infer<typeof JobReincarnationBonusSchema>;

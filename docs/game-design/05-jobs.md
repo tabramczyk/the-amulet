@@ -20,7 +20,7 @@ Each job defines:
 |-----|----------|-------------|--------|-----------|
 | Beggar | Slums | None | 1 | 1 |
 | Farmer | Fields | Beggar lvl 10 | 2 | 3 |
-| Laborer | Village | Strength 40 | 3 | 5 |
+| Laborer | Village | Strength 10, Farmer lvl 10 | 3 | 5 |
 
 ## Job Data Shape
 

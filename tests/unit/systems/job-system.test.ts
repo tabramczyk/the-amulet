@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   jobXpToNextLevel,
-  getJobPrestigeBonus,
+  getJobReincarnationBonus,
   areJobRequirementsMet,
   processJobXpGain,
 } from '../../../src/systems/job-system';
@@ -22,13 +22,13 @@ describe('Job System', () => {
     });
   });
 
-  describe('getJobPrestigeBonus', () => {
+  describe('getJobReincarnationBonus', () => {
     it('should return 1.0 with 0 lifetime levels', () => {
-      expect(getJobPrestigeBonus(0)).toBe(1);
+      expect(getJobReincarnationBonus(0)).toBe(1);
     });
 
     it('should return 1.15 with 15 lifetime levels', () => {
-      expect(getJobPrestigeBonus(15)).toBeCloseTo(1.15, 5);
+      expect(getJobReincarnationBonus(15)).toBeCloseTo(1.15, 5);
     });
   });
 
@@ -63,15 +63,18 @@ describe('Job System', () => {
       expect(areJobRequirementsMet('farmer', 'fields', defaultSkills, jobs)).toBe(true);
     });
 
-    it('should not allow laborer without strength 40', () => {
+    it('should not allow laborer without strength 10 and farmer 10', () => {
       expect(areJobRequirementsMet('laborer', 'village', defaultSkills, defaultJobs)).toBe(false);
     });
 
-    it('should allow laborer with strength 40 in village', () => {
+    it('should allow laborer with strength 10 and farmer 10 in village', () => {
       const skills = defaultSkills.map((s) =>
-        s.skillId === 'strength' ? { ...s, level: 40 } : s,
+        s.skillId === 'strength' ? { ...s, level: 10 } : s,
       );
-      expect(areJobRequirementsMet('laborer', 'village', skills, defaultJobs)).toBe(true);
+      const jobs = defaultJobs.map((j) =>
+        j.jobId === 'farmer' ? { ...j, level: 10 } : j,
+      );
+      expect(areJobRequirementsMet('laborer', 'village', skills, jobs)).toBe(true);
     });
 
     it('should return false for nonexistent job', () => {
@@ -106,10 +109,10 @@ describe('Job System', () => {
       expect(result.xp).toBe(2);
     });
 
-    it('should apply prestige bonus', () => {
-      const prestige = { jobId: 'beggar', totalLevelsAllLives: 15 };
+    it('should apply reincarnation bonus', () => {
+      const reincarnationData = { jobId: 'beggar', totalLevelsAllLives: 15 };
       // 5 * 1.15 = 5.75
-      const result = processJobXpGain(baseJob, 5, prestige);
+      const result = processJobXpGain(baseJob, 5, reincarnationData);
       expect(result.xp).toBeCloseTo(5.75, 5);
     });
 

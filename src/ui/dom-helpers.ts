@@ -6,6 +6,7 @@
 import type { ActionRequirement } from '../../specs/schemas';
 import { SKILLS } from '../data/skills';
 import { JOBS } from '../data/jobs';
+import { CLANS } from '../data/clans';
 
 /** Create an element with optional class names and text content. */
 export function el<K extends keyof HTMLElementTagNameMap>(
@@ -108,6 +109,11 @@ export function formatRequirement(req: ActionRequirement): string {
       if (req.minAge !== undefined) return `Age ${req.minAge}+`;
       if (req.maxAge !== undefined) return `Age ≤${req.maxAge}`;
       return 'Age requirement';
+    }
+    case 'clan': {
+      const clan = CLANS[req.clanId];
+      const name = clan?.name ?? req.clanId;
+      return `${name} member`;
     }
   }
 }

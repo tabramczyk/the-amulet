@@ -23,6 +23,10 @@ export const ActionRequirementSchema = z.discriminatedUnion('type', [
     minAge: z.number().int().min(16).optional(),
     maxAge: z.number().int().optional(),
   }),
+  z.object({
+    type: z.literal('clan'),
+    clanId: z.string().min(1),
+  }),
 ]);
 
 export type ActionRequirement = z.infer<typeof ActionRequirementSchema>;
@@ -36,6 +40,8 @@ export const ActionEffectSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('addSkillXp'), skillId: z.string(), amount: z.number() }),
   z.object({ type: z.literal('triggerReincarnation') }),
   z.object({ type: z.literal('showMessage'), message: z.string() }),
+  z.object({ type: z.literal('joinClan'), clanId: z.string() }),
+  z.object({ type: z.literal('clearPendingRelocation') }),
 ]);
 
 export type ActionEffect = z.infer<typeof ActionEffectSchema>;
@@ -50,6 +56,12 @@ export const TickEffectSchema = z.discriminatedUnion('type', [
 
 export type TickEffect = z.infer<typeof TickEffectSchema>;
 
+// --- Click Action Category ---
+
+export const ClickActionCategorySchema = z.enum(['action', 'story']);
+
+export type ClickActionCategory = z.infer<typeof ClickActionCategorySchema>;
+
 // --- Click Action ---
 
 export const ClickActionSchema = z.object({
@@ -57,6 +69,7 @@ export const ClickActionSchema = z.object({
   name: z.string().min(1),
   description: z.string(),
   type: z.literal('click'),
+  category: ClickActionCategorySchema.default('action'),
   timeCostDays: z.number().int().min(0),
   locationId: z.string().min(1),
   requirements: z.array(ActionRequirementSchema).default([]),

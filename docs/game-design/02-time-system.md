@@ -21,6 +21,16 @@
 3. **No background progression** when no action is active
 4. Click actions may consume 0 or more days (configurable per action)
 
+## Pacing Philosophy
+
+- This is a semi-idle game: time only passes when actions are active, but players should always have something meaningful to do
+- Players should NOT have to wait too long to make their next meaningful decision or action
+- Action requirements should be balanced so players are not stuck grinding one thing for too long before unlocking the next
+- The goal is a steady flow of progression: unlock, do, unlock next, repeat
+- Waiting time between meaningful decisions should be minimized
+- Requirements for progression gates (jobs, locations) should feel achievable within a reasonable portion of one life
+- Each life should present multiple decision points rather than a single long grind
+
 ## Implementation Notes
 
 - Use `requestAnimationFrame` for game loop

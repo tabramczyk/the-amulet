@@ -1,6 +1,6 @@
 Feature: Skills System
   Skills gain XP while relevant training actions are active.
-  Skills have soft caps per life and are affected by prestige bonuses.
+  Skills have soft caps per life and are affected by reincarnation bonuses.
 
   Background:
     Given a new game has started
@@ -32,11 +32,11 @@ Feature: Skills System
     When 1 game tick passes
     Then the "strength" XP gain should include a 10% concentration bonus
 
-  Scenario: Prestige bonus increases XP gain
+  Scenario: Reincarnation bonus increases XP gain
     Given the player has 20 total lifetime levels in "strength"
     And the player is training "strength"
     When 1 game tick passes
-    Then the "strength" XP gain should include a 20% prestige bonus
+    Then the "strength" XP gain should include a 20% reincarnation bonus
 
   Scenario: No XP gain without active training
     Given no continuous action is active

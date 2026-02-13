@@ -18,6 +18,7 @@ export function isRequirementMet(
   jobs: JobState[],
   storyFlags: Record<string, boolean>,
   currentAge: number,
+  clanIds: string[] = [],
 ): boolean {
   switch (req.type) {
     case 'skill': {
@@ -35,6 +36,8 @@ export function isRequirementMet(
       if (req.maxAge !== undefined && currentAge > req.maxAge) return false;
       return true;
     }
+    case 'clan':
+      return clanIds.includes(req.clanId);
   }
 }
 
@@ -47,9 +50,10 @@ export function areActionRequirementsMet(
   jobs: JobState[],
   storyFlags: Record<string, boolean>,
   currentAge: number,
+  clanIds: string[] = [],
 ): boolean {
   return requirements.every((req) =>
-    isRequirementMet(req, skills, jobs, storyFlags, currentAge),
+    isRequirementMet(req, skills, jobs, storyFlags, currentAge, clanIds),
   );
 }
 
@@ -62,11 +66,12 @@ export function getAvailableClickActions(
   jobs: JobState[],
   storyFlags: Record<string, boolean>,
   currentAge: number,
+  clanIds: string[] = [],
 ): ClickAction[] {
   return Object.values(CLICK_ACTIONS).filter(
     (action) =>
       action.locationId === currentLocationId &&
-      areActionRequirementsMet(action.requirements, skills, jobs, storyFlags, currentAge),
+      areActionRequirementsMet(action.requirements, skills, jobs, storyFlags, currentAge, clanIds),
   );
 }
 
@@ -79,11 +84,12 @@ export function getAvailableContinuousActions(
   jobs: JobState[],
   storyFlags: Record<string, boolean>,
   currentAge: number,
+  clanIds: string[] = [],
 ): ContinuousAction[] {
   return Object.values(CONTINUOUS_ACTIONS).filter(
     (action) =>
       action.locationId === currentLocationId &&
-      areActionRequirementsMet(action.requirements, skills, jobs, storyFlags, currentAge),
+      areActionRequirementsMet(action.requirements, skills, jobs, storyFlags, currentAge, clanIds),
   );
 }
 
@@ -121,4 +127,17 @@ export function getClickActionEffects(actionId: string): ActionEffect[] {
   const action = CLICK_ACTIONS[actionId];
   if (!action) return [];
   return action.effects;
+}
+
+/**
+ * Get the jobId associated with a continuous action's addJobXp effect.
+ * Returns null if no action or no addJobXp effect found.
+ */
+export function getJobIdFromAction(actionId: string | null): string | null {
+  if (!actionId) return null;
+  const action = CONTINUOUS_ACTIONS[actionId];
+  if (!action) return null;
+  const jobEffect = action.effects.find((e) => e.type === 'addJobXp');
+  if (!jobEffect || jobEffect.type !== 'addJobXp') return null;
+  return jobEffect.jobId;
 }

@@ -19,3 +19,18 @@ Feature: Daily Economy
   Scenario: Job payment shown per day
     Given the player is performing "begging" job action
     Then the job display should show "1 gold/day"
+
+  Scenario: Job payment grows with level
+    Given the player is performing "begging" job action
+    And the player has "beggar" job at level 5
+    Then the daily earnings should show 2 gold/day
+
+  Scenario: Job payment grows further at level 10
+    Given the player is performing "begging" job action
+    And the player has "beggar" job at level 10
+    Then the daily earnings should show 3 gold/day
+
+  Scenario: Job payment at level 0 is base pay
+    Given the player is performing "begging" job action
+    And the player has "beggar" job at level 0
+    Then the daily earnings should show 1 gold/day

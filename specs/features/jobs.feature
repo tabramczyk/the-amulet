@@ -40,8 +40,8 @@ Feature: Jobs System
     Then the job should be unavailable
     Because "farmer" is only available in "fields"
 
-  Scenario: Prestige bonus applies to job XP
+  Scenario: Reincarnation bonus applies to job XP
     Given the player has 15 total lifetime levels in "beggar" job
     And the player is working as "beggar"
     When 1 game tick passes
-    Then the beggar XP gain should include a 15% prestige bonus
+    Then the beggar XP gain should include a 15% reincarnation bonus

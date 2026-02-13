@@ -2,8 +2,9 @@ import type { GameState, TickEffect, ActionEffect } from '../../specs/schemas';
 import { advanceTime, DEATH_THRESHOLD_AGE } from '../core/time';
 import { processSkillXpGain, getConcentrationLevel } from './skill-system';
 import { processJobXpGain } from './job-system';
-import { getActiveTickEffects } from './action-system';
+import { getActiveTickEffects, getJobIdFromAction } from './action-system';
 import { getDailyExpenses, getLifestyleXpMultiplier } from './economy-system';
+import { JOBS } from '../data/jobs';
 
 /**
  * Process a single tick for the game state. Returns new game state.
@@ -16,6 +17,31 @@ export function processSingleTick(state: GameState): GameState {
   // Advance time by 1 day
   const newTime = advanceTime(state.time, 1);
 
+  // Check for pending relocation (e.g., prison release)
+  if (state.player.pendingRelocation) {
+    const pr = state.player.pendingRelocation;
+    if (newTime.currentDay >= pr.targetDay) {
+      const messageLog = pr.message
+        ? [...state.player.messageLog, pr.message]
+        : state.player.messageLog;
+      return {
+        ...state,
+        time: newTime,
+        isRunning: false,
+        player: {
+          ...state.player,
+          currentLocationId: pr.targetLocationId,
+          pendingRelocation: null,
+          activeJobActionId: null,
+          activeSkillActionId: null,
+          currentFoodId: null,
+          currentHousingId: null,
+          messageLog,
+        },
+      };
+    }
+  }
+
   // Check for death
   if (newTime.currentAge >= DEATH_THRESHOLD_AGE) {
     return {
@@ -26,20 +52,58 @@ export function processSingleTick(state: GameState): GameState {
         ...state.player,
         activeJobActionId: null,
         activeSkillActionId: null,
+        currentLocationId: 'death_gate',
         storyFlags: { ...state.player.storyFlags, amulet_glowing: true },
       },
     };
   }
 
   // Get tick effects from both active continuous actions
-  const tickEffects = [
-    ...getActiveTickEffects(state.player.activeJobActionId),
-    ...getActiveTickEffects(state.player.activeSkillActionId),
-  ];
+  const jobEffects = getActiveTickEffects(state.player.activeJobActionId);
+  const skillEffects = getActiveTickEffects(state.player.activeSkillActionId);
 
   // Apply tick effects
   let newState: GameState = { ...state, time: newTime };
-  for (const effect of tickEffects) {
+
+  // Process job effects with money scaling based on job level
+  // Use the job level at the START of the tick (from original state, not mid-tick updates)
+  const jobId = getJobIdFromAction(state.player.activeJobActionId);
+  const jobLevel = jobId ? (state.jobs.find((j) => j.jobId === jobId)?.level ?? 0) : 0;
+  for (const effect of jobEffects) {
+    if (effect.type === 'addMoney') {
+      newState = applyTickEffect(newState, {
+        ...effect,
+        amount: effect.amount + Math.floor(jobLevel / 5),
+      });
+    } else {
+      newState = applyTickEffect(newState, effect);
+    }
+  }
+
+  // Apply wage bonus from skills
+  if (jobId) {
+    const jobDef = JOBS[jobId];
+    if (jobDef?.wageBonusSkills) {
+      for (const bonus of jobDef.wageBonusSkills) {
+        const skillState = newState.skills.find((s) => s.skillId === bonus.skillId);
+        if (skillState && skillState.level > 0) {
+          const bonusMoney = Math.floor(skillState.level * bonus.bonusPerLevel);
+          if (bonusMoney > 0) {
+            newState = {
+              ...newState,
+              player: {
+                ...newState.player,
+                money: newState.player.money + bonusMoney,
+              },
+            };
+          }
+        }
+      }
+    }
+  }
+
+  // Process skill effects normally
+  for (const effect of skillEffects) {
     newState = applyTickEffect(newState, effect);
   }
 
@@ -111,28 +175,28 @@ function applyTickEffect(state: GameState, effect: TickEffect): GameState {
       };
 
     case 'addSkillXp': {
-      const prestigeData = state.prestige.skillPrestige.find(
+      const reincarnationData = state.reincarnation.skillBonuses.find(
         (sp) => sp.skillId === effect.skillId,
       );
       return {
         ...state,
         skills: state.skills.map((s) =>
           s.skillId === effect.skillId
-            ? processSkillXpGain(s, effect.amount * lifestyleMultiplier, concentrationLevel, prestigeData)
+            ? processSkillXpGain(s, effect.amount * lifestyleMultiplier, concentrationLevel, reincarnationData)
             : s,
         ),
       };
     }
 
     case 'addJobXp': {
-      const prestigeData = state.prestige.jobPrestige.find(
+      const reincarnationData = state.reincarnation.jobBonuses.find(
         (jp) => jp.jobId === effect.jobId,
       );
       return {
         ...state,
         jobs: state.jobs.map((j) =>
           j.jobId === effect.jobId
-            ? processJobXpGain(j, effect.amount * lifestyleMultiplier, prestigeData)
+            ? processJobXpGain(j, effect.amount * lifestyleMultiplier, reincarnationData)
             : j,
         ),
       };
@@ -172,14 +236,28 @@ function applySingleClickEffect(state: GameState, effect: ActionEffect): GameSta
         },
       };
 
-    case 'changeLocation':
+    case 'changeLocation': {
+      const isPrison = effect.locationId === 'prison';
+      const pendingRelocation = isPrison
+        ? {
+            targetDay: state.time.currentDay + 100,
+            targetLocationId: 'slums' as const,
+            message: "I'm finally free.",
+          }
+        : state.player.pendingRelocation;
       return {
         ...state,
+        isRunning: false,
         player: {
           ...state.player,
           currentLocationId: effect.locationId,
+          activeJobActionId: null,
+          activeSkillActionId: null,
+          pendingRelocation,
+          ...(isPrison ? { currentFoodId: 'prison_food', currentHousingId: 'prison_cell' } : {}),
         },
       };
+    }
 
     case 'addMoney':
       return {
@@ -192,14 +270,14 @@ function applySingleClickEffect(state: GameState, effect: ActionEffect): GameSta
 
     case 'addSkillXp': {
       const concentrationLevel = getConcentrationLevel(state.skills);
-      const prestigeData = state.prestige.skillPrestige.find(
+      const reincarnationData = state.reincarnation.skillBonuses.find(
         (sp) => sp.skillId === effect.skillId,
       );
       return {
         ...state,
         skills: state.skills.map((s) =>
           s.skillId === effect.skillId
-            ? processSkillXpGain(s, effect.amount, concentrationLevel, prestigeData)
+            ? processSkillXpGain(s, effect.amount, concentrationLevel, reincarnationData)
             : s,
         ),
       };
@@ -214,7 +292,32 @@ function applySingleClickEffect(state: GameState, effect: ActionEffect): GameSta
       };
 
     case 'showMessage':
-      // UI concern - just return state unchanged
-      return state;
+      return {
+        ...state,
+        player: {
+          ...state.player,
+          messageLog: [...state.player.messageLog, effect.message],
+        },
+      };
+
+    case 'joinClan':
+      return {
+        ...state,
+        player: {
+          ...state.player,
+          clanIds: state.player.clanIds.includes(effect.clanId)
+            ? state.player.clanIds
+            : [...state.player.clanIds, effect.clanId],
+        },
+      };
+
+    case 'clearPendingRelocation':
+      return {
+        ...state,
+        player: {
+          ...state.player,
+          pendingRelocation: null,
+        },
+      };
   }
 }

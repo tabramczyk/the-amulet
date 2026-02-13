@@ -10,6 +10,16 @@ interface GameLoopState {
   tickAccumulator: number;
 }
 
+let speedMultiplier = 1;
+
+export function setSpeedMultiplier(mult: number): void {
+  speedMultiplier = mult;
+}
+
+export function getSpeedMultiplier(): number {
+  return speedMultiplier;
+}
+
 const loopState: GameLoopState = {
   running: false,
   lastTimestamp: null,
@@ -23,7 +33,7 @@ function frame(timestamp: number): void {
 
   if (loopState.lastTimestamp !== null) {
     const deltaMs = timestamp - loopState.lastTimestamp;
-    const deltaTicks = msToTicks(deltaMs);
+    const deltaTicks = msToTicks(deltaMs) * speedMultiplier;
     const { wholeTicks, newAccumulator } = accumulateTicks(
       loopState.tickAccumulator,
       deltaTicks,

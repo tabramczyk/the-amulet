@@ -27,11 +27,11 @@ export const SkillStateSchema = z.object({
 
 export type SkillState = z.infer<typeof SkillStateSchema>;
 
-// --- Skill Prestige Data ---
+// --- Skill Reincarnation Bonus Data ---
 
-export const SkillPrestigeSchema = z.object({
+export const SkillReincarnationBonusSchema = z.object({
   skillId: z.string().min(1),
   totalLevelsAllLives: z.number().int().min(0),
 });
 
-export type SkillPrestige = z.infer<typeof SkillPrestigeSchema>;
+export type SkillReincarnationBonus = z.infer<typeof SkillReincarnationBonusSchema>;

@@ -22,6 +22,8 @@ const defaultJobs: JobState[] = [
   { jobId: 'beggar', level: 0, xp: 0, xpToNextLevel: 10 },
   { jobId: 'farmer', level: 0, xp: 0, xpToNextLevel: 10 },
   { jobId: 'laborer', level: 0, xp: 0, xpToNextLevel: 10 },
+  { jobId: 'soldier', level: 0, xp: 0, xpToNextLevel: 10 },
+  { jobId: 'robbery', level: 0, xp: 0, xpToNextLevel: 10 },
 ];
 
 const defaultFlags: Record<string, boolean> = {};
@@ -84,6 +86,21 @@ describe('Action System', () => {
       const req: ActionRequirement = { type: 'age', maxAge: 50 };
       expect(isRequirementMet(req, defaultSkills, defaultJobs, defaultFlags, 55)).toBe(false);
     });
+
+    it('should check clan requirement (met)', () => {
+      const req: ActionRequirement = { type: 'clan', clanId: 'army' };
+      expect(isRequirementMet(req, defaultSkills, defaultJobs, defaultFlags, 16, ['army'])).toBe(true);
+    });
+
+    it('should check clan requirement (not met)', () => {
+      const req: ActionRequirement = { type: 'clan', clanId: 'army' };
+      expect(isRequirementMet(req, defaultSkills, defaultJobs, defaultFlags, 16, [])).toBe(false);
+    });
+
+    it('should check clan requirement (wrong clan)', () => {
+      const req: ActionRequirement = { type: 'clan', clanId: 'army' };
+      expect(isRequirementMet(req, defaultSkills, defaultJobs, defaultFlags, 16, ['bandits'])).toBe(false);
+    });
   });
 
   describe('areActionRequirementsMet', () => {
@@ -110,24 +127,27 @@ describe('Action System', () => {
 
   describe('getAvailableClickActions', () => {
     it('should return click actions for slums with no requirements met', () => {
-      // travel_to_fields requires beggar 5, touch_amulet requires story flag
-      // Neither should be available
+      // take_amulet requires intro_complete flag
+      // With defaultFlags (empty), take_amulet should be available (no requirements)
+      // but travel_to_fields requires beggar 5 + intro_complete
       const actions = getAvailableClickActions('slums', defaultSkills, defaultJobs, defaultFlags, 16);
-      expect(actions.length).toBe(0);
+      // Only take_amulet should be available (it has no requirements)
+      expect(actions.length).toBe(1);
     });
 
     it('should return travel_to_fields when beggar level 5', () => {
       const jobs = defaultJobs.map((j) =>
         j.jobId === 'beggar' ? { ...j, level: 5 } : j,
       );
-      const actions = getAvailableClickActions('slums', defaultSkills, jobs, defaultFlags, 16);
+      const flags = { intro_complete: true };
+      const actions = getAvailableClickActions('slums', defaultSkills, jobs, flags, 16);
       const ids = actions.map((a) => a.id);
       expect(ids).toContain('travel_to_fields');
     });
 
     it('should return touch_amulet when amulet_glowing is set', () => {
       const flags = { amulet_glowing: true };
-      const actions = getAvailableClickActions('slums', defaultSkills, defaultJobs, flags, 16);
+      const actions = getAvailableClickActions('death_gate', defaultSkills, defaultJobs, flags, 16);
       const ids = actions.map((a) => a.id);
       expect(ids).toContain('touch_amulet');
     });
@@ -139,11 +159,26 @@ describe('Action System', () => {
         expect(action.locationId).toBe('fields');
       }
     });
+
+    it('should return travel_to_barracks when in army clan', () => {
+      const flags = { intro_complete: true };
+      const actions = getAvailableClickActions('village', defaultSkills, defaultJobs, flags, 16, ['army']);
+      const ids = actions.map((a) => a.id);
+      expect(ids).toContain('travel_to_barracks');
+    });
+
+    it('should not return travel_to_barracks without army clan', () => {
+      const flags = { intro_complete: true };
+      const actions = getAvailableClickActions('village', defaultSkills, defaultJobs, flags, 16, []);
+      const ids = actions.map((a) => a.id);
+      expect(ids).not.toContain('travel_to_barracks');
+    });
   });
 
   describe('getAvailableContinuousActions', () => {
     it('should return continuous actions for slums', () => {
-      const actions = getAvailableContinuousActions('slums', defaultSkills, defaultJobs, defaultFlags, 16);
+      const flags = { intro_complete: true };
+      const actions = getAvailableContinuousActions('slums', defaultSkills, defaultJobs, flags, 16);
       const ids = actions.map((a) => a.id);
       expect(ids).toContain('begging');
       expect(ids).toContain('train_concentration');
@@ -152,7 +187,8 @@ describe('Action System', () => {
 
     it('should filter by requirements in fields', () => {
       // farming requires beggar level 10
-      const actions = getAvailableContinuousActions('fields', defaultSkills, defaultJobs, defaultFlags, 16);
+      const flags = { intro_complete: true };
+      const actions = getAvailableContinuousActions('fields', defaultSkills, defaultJobs, flags, 16);
       const ids = actions.map((a) => a.id);
       expect(ids).not.toContain('farming');
       expect(ids).toContain('train_strength_fields');
@@ -162,9 +198,27 @@ describe('Action System', () => {
       const jobs = defaultJobs.map((j) =>
         j.jobId === 'beggar' ? { ...j, level: 10 } : j,
       );
-      const actions = getAvailableContinuousActions('fields', defaultSkills, jobs, defaultFlags, 16);
+      const flags = { intro_complete: true };
+      const actions = getAvailableContinuousActions('fields', defaultSkills, jobs, flags, 16);
       const ids = actions.map((a) => a.id);
       expect(ids).toContain('farming');
+    });
+
+    it('should return barracks actions when at barracks', () => {
+      const flags = { intro_complete: true };
+      const actions = getAvailableContinuousActions('barracks', defaultSkills, defaultJobs, flags, 16);
+      const ids = actions.map((a) => a.id);
+      expect(ids).toContain('soldiering');
+      expect(ids).toContain('train_strength_barracks');
+    });
+
+    it('should return bandit hideout actions when at hideout', () => {
+      const flags = { intro_complete: true };
+      const actions = getAvailableContinuousActions('bandit_hideout', defaultSkills, defaultJobs, flags, 16);
+      const ids = actions.map((a) => a.id);
+      expect(ids).toContain('robbing');
+      expect(ids).toContain('train_strength_hideout');
+      expect(ids).toContain('train_endurance_hideout');
     });
   });
 

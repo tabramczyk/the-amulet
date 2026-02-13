@@ -2,12 +2,12 @@ import { describe, it, expect } from 'vitest';
 import {
   xpToNextLevel,
   getConcentrationBonus,
-  getPrestigeBonus,
+  getReincarnationBonus,
   calculateEffectiveXp,
   processSkillXpGain,
   getConcentrationLevel,
 } from '../../../src/systems/skill-system';
-import type { SkillState, SkillPrestige } from '../../../specs/schemas';
+import type { SkillState, SkillReincarnationBonus } from '../../../specs/schemas';
 
 describe('Skill System', () => {
   describe('xpToNextLevel', () => {
@@ -42,17 +42,17 @@ describe('Skill System', () => {
     });
   });
 
-  describe('getPrestigeBonus', () => {
+  describe('getReincarnationBonus', () => {
     it('should return 1.0 with 0 lifetime levels', () => {
-      expect(getPrestigeBonus(0)).toBe(1);
+      expect(getReincarnationBonus(0)).toBe(1);
     });
 
     it('should return 1.20 with 20 lifetime levels', () => {
-      expect(getPrestigeBonus(20)).toBeCloseTo(1.2, 5);
+      expect(getReincarnationBonus(20)).toBeCloseTo(1.2, 5);
     });
 
     it('should return 1.15 with 15 lifetime levels', () => {
-      expect(getPrestigeBonus(15)).toBeCloseTo(1.15, 5);
+      expect(getReincarnationBonus(15)).toBeCloseTo(1.15, 5);
     });
   });
 
@@ -62,17 +62,17 @@ describe('Skill System', () => {
     });
 
     it('should apply concentration bonus', () => {
-      // 1 base * 1.10 concentration * 1.0 prestige = 1.1
+      // 1 base * 1.10 concentration * 1.0 reincarnation = 1.1
       expect(calculateEffectiveXp(1, 0, 50, 10, 0)).toBeCloseTo(1.1, 5);
     });
 
-    it('should apply prestige bonus', () => {
-      // 1 base * 1.0 concentration * 1.20 prestige = 1.2
+    it('should apply reincarnation bonus', () => {
+      // 1 base * 1.0 concentration * 1.20 reincarnation = 1.2
       expect(calculateEffectiveXp(1, 0, 50, 0, 20)).toBeCloseTo(1.2, 5);
     });
 
     it('should apply both bonuses', () => {
-      // 1 base * 1.10 concentration * 1.20 prestige = 1.32
+      // 1 base * 1.10 concentration * 1.20 reincarnation = 1.32
       expect(calculateEffectiveXp(1, 0, 50, 10, 20)).toBeCloseTo(1.32, 5);
     });
 
@@ -82,7 +82,7 @@ describe('Skill System', () => {
     });
 
     it('should apply soft cap with bonuses', () => {
-      // 1 base * 1.10 concentration * 1.20 prestige * 0.1 soft cap = 0.132
+      // 1 base * 1.10 concentration * 1.20 reincarnation * 0.1 soft cap = 0.132
       expect(calculateEffectiveXp(1, 50, 50, 10, 20)).toBeCloseTo(0.132, 5);
     });
 
@@ -132,13 +132,13 @@ describe('Skill System', () => {
       expect(result.xp).toBeCloseTo(5.5, 5);
     });
 
-    it('should apply prestige bonus', () => {
-      const prestige: SkillPrestige = {
+    it('should apply reincarnation bonus', () => {
+      const reincarnationData: SkillReincarnationBonus = {
         skillId: 'strength',
         totalLevelsAllLives: 20,
       };
-      // Base 1 * 1.0 conc * 1.20 prestige = 1.2
-      const result = processSkillXpGain(baseSkill, 1, 0, prestige);
+      // Base 1 * 1.0 conc * 1.20 reincarnation = 1.2
+      const result = processSkillXpGain(baseSkill, 1, 0, reincarnationData);
       expect(result.xp).toBeCloseTo(1.2, 5);
     });
 

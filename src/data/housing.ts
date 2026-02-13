@@ -6,7 +6,7 @@ export const HOUSING_OPTIONS: Record<string, HousingOption> = {
     name: 'Ragged Tent',
     description: 'A patched-up tent in a back alley. Better than nothing.',
     locationId: 'slums',
-    dailyCost: 1,
+    dailyCost: 2,
     xpBonusPercent: 5,
   },
   lean_to: {
@@ -14,7 +14,7 @@ export const HOUSING_OPTIONS: Record<string, HousingOption> = {
     name: 'Lean-to Shelter',
     description: 'A rough wooden shelter at the edge of the farmlands.',
     locationId: 'fields',
-    dailyCost: 2,
+    dailyCost: 3,
     xpBonusPercent: 10,
   },
   room: {
@@ -22,7 +22,15 @@ export const HOUSING_OPTIONS: Record<string, HousingOption> = {
     name: 'Rented Room',
     description: 'A small but clean room above the village tavern.',
     locationId: 'village',
-    dailyCost: 3,
+    dailyCost: 5,
     xpBonusPercent: 15,
+  },
+  prison_cell: {
+    id: 'prison_cell',
+    name: 'Prison Cell',
+    description: 'A cold stone cell with a thin mattress. At least you have a roof.',
+    locationId: 'prison',
+    dailyCost: 0,
+    xpBonusPercent: 3,
   },
 };

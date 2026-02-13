@@ -157,7 +157,17 @@ function updateActionItems(
         state.jobs,
         state.player.storyFlags,
         state.time.currentAge,
+        state.player.clanIds,
       );
+
+    // Hide actions with unmet story flag or clan requirements entirely
+    const hasUnmetStoryFlag = action.requirements.some(
+      (req) => req.type === 'storyFlag' && !isRequirementMet(req, state.skills, state.jobs, state.player.storyFlags, state.time.currentAge, state.player.clanIds)
+    );
+    const hasUnmetClan = action.requirements.some(
+      (req) => req.type === 'clan' && !state.player.clanIds.includes(req.clanId)
+    );
+    cached.item.style.display = (hasUnmetStoryFlag || hasUnmetClan) ? 'none' : '';
 
     cached.item.className = isActive
       ? 'continuous-action-item continuous-action-item--active'
@@ -169,7 +179,7 @@ function updateActionItems(
 
     if (!canDo) {
       const unmet = action.requirements
-        .filter((req) => !isRequirementMet(req, state.skills, state.jobs, state.player.storyFlags, state.time.currentAge))
+        .filter((req) => !isRequirementMet(req, state.skills, state.jobs, state.player.storyFlags, state.time.currentAge, state.player.clanIds))
         .map(formatRequirement);
       setText(cached.reqEl, unmet.length > 0 ? `Requires: ${unmet.join(', ')}` : '');
     } else {

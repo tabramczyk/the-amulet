@@ -1,8 +1,8 @@
-import type { JobState, JobPrestige, SkillState } from '../../specs/schemas';
+import type { JobState, JobReincarnationBonus, SkillState } from '../../specs/schemas';
 import { JOBS } from '../data/jobs';
 
 const BASE_XP_PER_LEVEL = 10;
-const PRESTIGE_BONUS_PER_LEVEL = 0.01;
+const REINCARNATION_BONUS_PER_LEVEL = 0.01;
 
 /**
  * Calculate XP required for the next job level.
@@ -12,10 +12,10 @@ export function jobXpToNextLevel(currentLevel: number): number {
 }
 
 /**
- * Calculate the prestige bonus multiplier for a job.
+ * Calculate the reincarnation bonus multiplier for a job.
  */
-export function getJobPrestigeBonus(totalLevelsAllLives: number): number {
-  return 1 + totalLevelsAllLives * PRESTIGE_BONUS_PER_LEVEL;
+export function getJobReincarnationBonus(totalLevelsAllLives: number): number {
+  return 1 + totalLevelsAllLives * REINCARNATION_BONUS_PER_LEVEL;
 }
 
 /**
@@ -55,14 +55,14 @@ export function areJobRequirementsMet(
 export function processJobXpGain(
   job: JobState,
   xpAmount: number,
-  prestigeData: JobPrestige | undefined,
+  reincarnationData: JobReincarnationBonus | undefined,
 ): JobState {
   const jobDef = JOBS[job.jobId];
   if (!jobDef) return job;
 
-  const totalPrestigeLevels = prestigeData?.totalLevelsAllLives ?? 0;
-  const prestigeBonus = getJobPrestigeBonus(totalPrestigeLevels);
-  const effectiveXp = xpAmount * prestigeBonus;
+  const totalReincarnationLevels = reincarnationData?.totalLevelsAllLives ?? 0;
+  const reincarnationBonus = getJobReincarnationBonus(totalReincarnationLevels);
+  const effectiveXp = xpAmount * reincarnationBonus;
 
   let newXp = job.xp + effectiveXp;
   let newLevel = job.level;
