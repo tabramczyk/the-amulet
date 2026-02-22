@@ -40,18 +40,30 @@ Feature: Life Cycle
     And the game is loaded
     Then all game state should match the saved state
 
-  Scenario: Pending relocation pauses game on last day
-    Given the player has a pending relocation in 100 days
-    When 99 game ticks pass
-    Then the game should pause
-    And the player should still be at the pending relocation's origin
+  Scenario: Prison release moves player to slums
+    Given the player is in "prison"
+    And the player has a pending relocation to "slums" at day 365
+    And the player has active continuous actions
+    When 365 game ticks pass
+    Then the player should be in "slums"
+    And the game should pause
+    And a release message should appear in the message log
 
-  Scenario: Prison last day shows bandit message and clears active actions
+  Scenario: Prisoners steal meals on prison day 30
+    Given the player is in "prison"
+    And the player has "prison_food" as current food
+    And the player entered prison on day 0
+    When 30 game ticks pass
+    Then the player's current food should be null
+    And a meal-stealing message should appear in the message log
+
+  Scenario: Bandit proposal appears on prison day 100
     Given the player is in "prison"
     And the player has active continuous actions
-    And the player has a pending relocation in 100 days
-    When 99 game ticks pass
+    And the player entered prison on day 0
+    When 100 game ticks pass
     Then the game should pause
     And the player's active job action should be cleared
     And the player's active skill action should be cleared
     And a bandit leader message should appear in the message log
+    And the "bandit_proposal_active" story flag should be set

@@ -139,7 +139,8 @@ The main agent acts as **team lead** and must NEVER modify any files (code, spec
 docs, configs — nothing). The team lead's only job is to **understand, plan, and delegate**.
 
 1. **Understand the request** — read relevant specs, schemas, and code to grasp scope
-2. **Plan the approach** — decide which agents are needed and what each should do
+2. **Plan the approach** — for new game tasks, plan ONLY spec changes (Phase 0–1).
+   Plan tests, implementation, and validation separately after specs are approved.
 3. **Enforce development cycle ordering** — delegate in phase order:
    - First: spec updates (Architect for schemas, QA/Architect for features)
    - Then: test updates (QA/Security, Implementer)

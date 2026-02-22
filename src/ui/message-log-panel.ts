@@ -3,6 +3,7 @@ import { el, clearChildren } from './dom-helpers';
 
 let panel: HTMLElement;
 let messagesContainer: HTMLElement;
+let prevMessageCount = 0;
 
 /**
  * Create the message log panel UI.
@@ -57,4 +58,17 @@ export function updateMessageLogPanel(): void {
     }
     messagesContainer.appendChild(entry);
   }
+
+  // Auto-scroll to bottom
+  messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+  // Trigger highlight animation when new messages arrive
+  if (messages.length > prevMessageCount && prevMessageCount > 0) {
+    panel.classList.add('message-log--highlight');
+    panel.addEventListener('animationend', () => {
+      panel.classList.remove('message-log--highlight');
+    }, { once: true });
+  }
+
+  prevMessageCount = messages.length;
 }

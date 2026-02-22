@@ -144,16 +144,12 @@ function updateActionItems(
     (a) => a.locationId === locationId,
   );
 
-  const isLastDayPause = state.player.pendingRelocation !== null &&
-    state.time.currentDay >= state.player.pendingRelocation.targetDay - 1;
-
   for (const action of actions) {
     const cached = cache.get(action.id);
     if (!cached) continue;
 
     const isActive = activeId === action.id;
     const canDo =
-      !isLastDayPause &&
       state.isAlive &&
       areActionRequirementsMet(
         action.requirements,

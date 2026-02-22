@@ -40,21 +40,49 @@ export function processSingleTick(state: GameState): GameState {
         },
       };
     }
-    // Pause on last day so player can choose (e.g., prison exit choice)
-    if (newTime.currentDay >= pr.targetDay - 1) {
-      const isPrison = state.player.currentLocationId === 'prison';
-      return {
-        ...state,
-        time: newTime,
-        isRunning: false,
-        player: isPrison ? {
-          ...state.player,
-          activeJobActionId: null,
-          activeSkillActionId: null,
-          messageLog: [...state.player.messageLog,
-            'The bandit leader approached you: "Hey boy, we need hands for a job with quick profit, if you know what I mean. Lift this stone and you\'re in."'],
-        } : state.player,
-      };
+
+    // Prison-specific timed events
+    const isPrison = state.player.currentLocationId === 'prison';
+    if (isPrison && pr.entryDay !== undefined) {
+      const prisonDay = newTime.currentDay - pr.entryDay;
+
+      // Day 100: Bandit proposal (pauses game)
+      if (prisonDay >= 100 && !state.player.storyFlags['bandit_proposal_shown']) {
+        return {
+          ...state,
+          time: newTime,
+          isRunning: false,
+          player: {
+            ...state.player,
+            activeJobActionId: null,
+            activeSkillActionId: null,
+            storyFlags: {
+              ...state.player.storyFlags,
+              bandit_proposal_active: true,
+              bandit_proposal_shown: true,
+            },
+            messageLog: [...state.player.messageLog,
+              'The bandit leader approached you: "Hey boy, we need hands for a job with quick profit, if you know what I mean. Lift this stone and you\'re in."'],
+          },
+        };
+      }
+
+      // Day 30: Meal stealing (non-blocking, modifies state and continues)
+      if (prisonDay >= 30 && !state.player.storyFlags['prison_meals_stolen']) {
+        state = {
+          ...state,
+          player: {
+            ...state.player,
+            currentFoodId: null,
+            storyFlags: {
+              ...state.player.storyFlags,
+              prison_meals_stolen: true,
+            },
+            messageLog: [...state.player.messageLog,
+              'The other prisoners have started stealing your meals. You go hungry now.'],
+          },
+        };
+      }
     }
   }
 
@@ -256,9 +284,10 @@ function applySingleClickEffect(state: GameState, effect: ActionEffect): GameSta
       const isPrison = effect.locationId === 'prison';
       const pendingRelocation = isPrison
         ? {
-            targetDay: state.time.currentDay + 100,
+            targetDay: state.time.currentDay + 365,
             targetLocationId: 'slums' as const,
             message: "I'm finally free.",
+            entryDay: state.time.currentDay,
           }
         : state.player.pendingRelocation;
       return {
@@ -333,6 +362,15 @@ function applySingleClickEffect(state: GameState, effect: ActionEffect): GameSta
         player: {
           ...state.player,
           pendingRelocation: null,
+        },
+      };
+
+    case 'setFoodId':
+      return {
+        ...state,
+        player: {
+          ...state.player,
+          currentFoodId: effect.foodId,
         },
       };
   }

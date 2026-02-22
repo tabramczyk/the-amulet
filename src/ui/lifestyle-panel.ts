@@ -7,6 +7,7 @@ let panel: HTMLElement;
 let housingContainer: HTMLElement;
 let foodContainer: HTMLElement;
 let lastLocationId: string | null = null;
+let lastPrisonMealsStolen = false;
 
 // Cache for housing buttons
 const housingCache = new Map<string | 'none', { btn: HTMLButtonElement }>();
@@ -85,9 +86,21 @@ function buildFoodButtons(locationId: string): void {
   const locationFood = Object.values(FOOD_OPTIONS).filter(
     (f) => f.locationId === locationId,
   );
-  const foodToShow = locationFood.length > 0
+  const state = store.getState();
+  const foodToShow = (locationFood.length > 0
     ? locationFood
-    : Object.values(FOOD_OPTIONS).filter((f) => !f.locationId);
+    : Object.values(FOOD_OPTIONS).filter((f) => !f.locationId)
+  ).filter((f) => {
+    // Hide prison food after meals are stolen, until player joins bandits
+    if (
+      f.id === 'prison_food' &&
+      state.player.storyFlags['prison_meals_stolen'] &&
+      !state.player.clanIds.includes('bandits')
+    ) {
+      return false;
+    }
+    return true;
+  });
 
   for (const option of foodToShow) {
     const btn = document.createElement('button');
@@ -105,11 +118,16 @@ function buildFoodButtons(locationId: string): void {
 export function updateLifestylePanel(): void {
   const state = store.getState();
   const locationId = state.player.currentLocationId;
+  const prisonMealsStolen = !!state.player.storyFlags['prison_meals_stolen'];
 
-  // Rebuild housing AND food buttons on location change
+  // Rebuild housing AND food buttons on location change or food filter change
   if (locationId !== lastLocationId) {
     buildHousingButtons(locationId);
     buildFoodButtons(locationId);
+    lastPrisonMealsStolen = prisonMealsStolen;
+  } else if (prisonMealsStolen !== lastPrisonMealsStolen) {
+    buildFoodButtons(locationId);
+    lastPrisonMealsStolen = prisonMealsStolen;
   }
 
   // Update housing active state

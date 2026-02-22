@@ -5,7 +5,7 @@ on:
     branches: [master]
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -46,3 +46,12 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+      - name: Auto-tag release
+        run: |
+          VERSION=$(grep -m1 '## \[' CHANGELOG.md | sed 's/.*\[\(.*\)\].*/\1/')
+          TAG="v${VERSION}"
+          if ! git rev-parse "$TAG" >/dev/null 2>&1; then
+            git tag "$TAG"
+            git push origin "$TAG"
+          fi

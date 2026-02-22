@@ -35,3 +35,23 @@ Feature: Food System
     And the player has "scraps" food at 1 gold/day
     When 1 game tick passes
     Then the player's gold should decrease by 2
+
+  Scenario: Prison gruel blocked after meal-stealing event
+    Given the player is in "prison"
+    And the player has "prison_food" as current food
+    When prisoners steal the player's meals on day 30
+    Then the player's current food should be null
+
+  Scenario: Prison gruel restored after lifting stone
+    Given the player is in "prison"
+    And the player's current food is null
+    And the "bandit_proposal_active" story flag is set
+    And the player has "strength" at level 8
+    When the player performs "bandit_lift_stone" action
+    Then the player's current food should be "prison_food"
+
+  Scenario: Prison gruel unavailable for re-selection after meal-stealing
+    Given the player is in "prison"
+    And the "prison_meals_stolen" story flag is set
+    And the player is not in the "bandits" clan
+    Then "prison_food" should not be selectable in the food panel

@@ -29,6 +29,7 @@ export const PlayerStateSchema = z.object({
     targetDay: z.number().int().min(0),
     targetLocationId: z.string().min(1),
     message: z.string().optional(),
+    entryDay: z.number().int().min(0).optional(),
   }).nullable().default(null),
 });
 

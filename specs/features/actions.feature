@@ -76,39 +76,34 @@ Feature: Actions System
     Then the "Travel to the Fields" action should be disabled
     And it should show "Requires: Beggar Lv.5"
 
-  Scenario: Decline the Proposal is only available on prison last day
+  Scenario: Decline the Proposal requires bandit_proposal_active flag
     Given the player is in "prison"
-    And the player has 50 days remaining in their sentence
+    And the "bandit_proposal_active" story flag is not set
     When the player checks available actions
     Then "Decline the Proposal" should not be available
-    Because it is not the last day of the sentence
 
-  Scenario: Both prison exit actions available on last day
+  Scenario: Both bandit actions available when proposal is active
     Given the player is in "prison"
-    And it is the last day of the player's sentence
+    And the "bandit_proposal_active" story flag is set
     And the player has "strength" at level 8
     When the player checks available actions
     Then "Decline the Proposal" should be available
     And "Lift the Loose Stone" should be available
 
-  Scenario: Game pauses on last day of prison sentence
+  Scenario: Lifting stone restores gruel and joins bandits but stays in prison
     Given the player is in "prison"
-    And the player has a pending relocation
-    When the last day of the sentence is reached
-    Then the game should pause
-    And the player must choose an action before time resumes
+    And the "bandit_proposal_active" story flag is set
+    And the player has "strength" at level 8
+    When the player performs "bandit_lift_stone" action
+    Then the player should join the "bandits" clan
+    And the player's current food should be "prison_food"
+    And the "bandit_proposal_active" story flag should not be set
+    And the player should still be in "prison"
 
-  Scenario: Bandit leader message appears on prison last day
+  Scenario: Declining proposal leaves player without gruel
     Given the player is in "prison"
-    And the player has a pending relocation
-    When the last day of the sentence is reached
-    Then a bandit leader message should appear in the message log
-    And the game should pause
-
-  Scenario: Continuous actions disabled on prison last day
-    Given the player is in "prison"
-    And the player has active continuous actions
-    When the last day of the sentence is reached
-    Then all continuous actions should be disabled
-    And the player's active job action should be cleared
-    And the player's active skill action should be cleared
+    And the "bandit_proposal_active" story flag is set
+    When the player performs "bandit_give_up" action
+    Then the "bandit_proposal_active" story flag should not be set
+    And the player's current food should be null
+    And the player should still be in "prison"

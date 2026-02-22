@@ -349,7 +349,7 @@ export const CLICK_ACTIONS: Record<string, ClickAction> = {
       { type: 'storyFlag', flag: 'intro_complete', value: false },
     ],
     effects: [
-      { type: 'showMessage', message: 'You were caught and sentenced for 100 days in prison. Maybe this will teach you your place.' },
+      { type: 'showMessage', message: 'You were caught and sentenced for 1 year in prison. Maybe this will teach you your place.' },
       { type: 'setStoryFlag', flag: 'intro_complete', value: true },
       { type: 'setStoryFlag', flag: 'in_prison', value: true },
       { type: 'changeLocation', locationId: 'prison' },
@@ -536,13 +536,13 @@ export const CLICK_ACTIONS: Record<string, ClickAction> = {
     requirements: [
       { type: 'storyFlag', flag: 'intro_complete', value: true },
       { type: 'skill', skillId: 'strength', level: 8 },
-      { type: 'pendingRelocationLastDay' },
+      { type: 'storyFlag', flag: 'bandit_proposal_active', value: true },
     ],
     effects: [
-      { type: 'showMessage', message: "You pry the stone free and crawl through the tunnel. A group of bandits greets you on the other side. 'Welcome to the family,' their leader grins." },
+      { type: 'showMessage', message: "You pry the stone free. A group of bandits greets you. 'Welcome to the family,' their leader grins. Your meals are restored." },
       { type: 'joinClan', clanId: 'bandits' },
-      { type: 'clearPendingRelocation' },
-      { type: 'changeLocation', locationId: 'slums' },
+      { type: 'setFoodId', foodId: 'prison_food' },
+      { type: 'setStoryFlag', flag: 'bandit_proposal_active', value: false },
     ],
   },
 
@@ -557,12 +557,11 @@ export const CLICK_ACTIONS: Record<string, ClickAction> = {
     locationId: 'prison',
     requirements: [
       { type: 'storyFlag', flag: 'intro_complete', value: true },
-      { type: 'pendingRelocationLastDay' },
+      { type: 'storyFlag', flag: 'bandit_proposal_active', value: true },
     ],
     effects: [
-      { type: 'showMessage', message: "You shake your head. The bandit leader shrugs and disappears into the shadows. The next morning, the guards release you." },
-      { type: 'clearPendingRelocation' },
-      { type: 'changeLocation', locationId: 'slums' },
+      { type: 'showMessage', message: "You shake your head. The bandit leader shrugs and disappears into the shadows. You remain in your cell, hungry." },
+      { type: 'setStoryFlag', flag: 'bandit_proposal_active', value: false },
     ],
   },
 

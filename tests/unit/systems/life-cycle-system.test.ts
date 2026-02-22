@@ -339,6 +339,8 @@ describe('Life Cycle System', () => {
       expect(result.player.currentLocationId).toBe('prison');
       expect(result.player.currentFoodId).toBe('prison_food');
       expect(result.player.currentHousingId).toBe('prison_cell');
+      expect(result.player.pendingRelocation?.targetDay).toBe(365);
+      expect(result.player.pendingRelocation?.entryDay).toBe(0);
     });
 
     it('should not set prison food/housing for non-prison locations', () => {
@@ -420,8 +422,8 @@ describe('Life Cycle System', () => {
     });
   });
 
-  describe('prison last day behavior', () => {
-    it('should clear active actions and add bandit message on prison last day', () => {
+  describe('prison timed events', () => {
+    it('should steal meals on prison day 30', () => {
       const state = makeState({
         player: {
           ...createInitialGameState().player,
@@ -431,55 +433,173 @@ describe('Life Cycle System', () => {
           currentFoodId: 'prison_food',
           currentHousingId: 'prison_cell',
           pendingRelocation: {
-            targetDay: 100,
+            targetDay: 365,
             targetLocationId: 'slums',
             message: "I'm finally free.",
+            entryDay: 0,
           },
         },
         time: {
-          currentDay: 98,
+          currentDay: 29,
           currentAge: 16,
           tickAccumulator: 0,
         },
       });
       const result = processSingleTick(state);
-      // Should pause
+      expect(result.player.currentFoodId).toBeNull();
+      expect(result.player.storyFlags['prison_meals_stolen']).toBe(true);
+      expect(result.player.messageLog.some(m => m.includes('stealing your meals'))).toBe(true);
+      expect(result.player.activeJobActionId).toBe('prison_meditate');
+      expect(result.player.activeSkillActionId).toBe('prison_train_strength');
+    });
+
+    it('should not steal meals twice', () => {
+      const state = makeState({
+        player: {
+          ...createInitialGameState().player,
+          currentLocationId: 'prison',
+          activeJobActionId: 'prison_meditate',
+          activeSkillActionId: 'prison_train_strength',
+          currentFoodId: null,
+          currentHousingId: 'prison_cell',
+          storyFlags: { prison_meals_stolen: true },
+          pendingRelocation: {
+            targetDay: 365,
+            targetLocationId: 'slums',
+            message: "I'm finally free.",
+            entryDay: 0,
+          },
+        },
+        time: {
+          currentDay: 35,
+          currentAge: 16,
+          tickAccumulator: 0,
+        },
+      });
+      const result = processSingleTick(state);
+      expect(result.player.messageLog.some(m => m.includes('stealing your meals'))).toBe(false);
+    });
+
+    it('should show bandit proposal on prison day 100', () => {
+      const state = makeState({
+        player: {
+          ...createInitialGameState().player,
+          currentLocationId: 'prison',
+          activeJobActionId: 'prison_meditate',
+          activeSkillActionId: 'prison_train_strength',
+          currentFoodId: null,
+          currentHousingId: 'prison_cell',
+          storyFlags: { prison_meals_stolen: true },
+          pendingRelocation: {
+            targetDay: 365,
+            targetLocationId: 'slums',
+            message: "I'm finally free.",
+            entryDay: 0,
+          },
+        },
+        time: {
+          currentDay: 99,
+          currentAge: 16,
+          tickAccumulator: 0,
+        },
+      });
+      const result = processSingleTick(state);
       expect(result.isRunning).toBe(false);
-      // Should clear active actions
       expect(result.player.activeJobActionId).toBeNull();
       expect(result.player.activeSkillActionId).toBeNull();
-      // Should still be in prison (not relocated yet)
       expect(result.player.currentLocationId).toBe('prison');
-      // Should add bandit message
+      expect(result.player.storyFlags['bandit_proposal_active']).toBe(true);
+      expect(result.player.storyFlags['bandit_proposal_shown']).toBe(true);
       expect(result.player.messageLog).toContain(
         'The bandit leader approached you: "Hey boy, we need hands for a job with quick profit, if you know what I mean. Lift this stone and you\'re in."'
       );
     });
 
-    it('should not add bandit message on last day for non-prison locations', () => {
+    it('should not show bandit proposal twice', () => {
+      const state = makeState({
+        player: {
+          ...createInitialGameState().player,
+          currentLocationId: 'prison',
+          activeJobActionId: 'prison_meditate',
+          activeSkillActionId: 'prison_train_strength',
+          currentFoodId: null,
+          currentHousingId: 'prison_cell',
+          storyFlags: { prison_meals_stolen: true, bandit_proposal_shown: true },
+          pendingRelocation: {
+            targetDay: 365,
+            targetLocationId: 'slums',
+            message: "I'm finally free.",
+            entryDay: 0,
+          },
+        },
+        time: {
+          currentDay: 105,
+          currentAge: 16,
+          tickAccumulator: 0,
+        },
+      });
+      const result = processSingleTick(state);
+      expect(result.player.messageLog).not.toContain(
+        expect.stringContaining('bandit leader')
+      );
+    });
+
+    it('should release from prison when reaching target day', () => {
+      const state = makeState({
+        player: {
+          ...createInitialGameState().player,
+          currentLocationId: 'prison',
+          activeJobActionId: 'prison_meditate',
+          activeSkillActionId: 'prison_train_strength',
+          currentFoodId: null,
+          currentHousingId: 'prison_cell',
+          storyFlags: { prison_meals_stolen: true, bandit_proposal_shown: true },
+          pendingRelocation: {
+            targetDay: 365,
+            targetLocationId: 'slums',
+            message: "I'm finally free.",
+            entryDay: 0,
+          },
+        },
+        time: {
+          currentDay: 364,
+          currentAge: 16,
+          tickAccumulator: 0,
+        },
+      });
+      const result = processSingleTick(state);
+      expect(result.isRunning).toBe(false);
+      expect(result.player.currentLocationId).toBe('slums');
+      expect(result.player.pendingRelocation).toBeNull();
+      expect(result.player.activeJobActionId).toBeNull();
+      expect(result.player.activeSkillActionId).toBeNull();
+      expect(result.player.messageLog).toContain("I'm finally free.");
+    });
+
+    it('should relocate non-prison locations without bandit events', () => {
       const state = makeState({
         player: {
           ...createInitialGameState().player,
           currentLocationId: 'fields',
           activeJobActionId: 'fishing',
           pendingRelocation: {
-            targetDay: 100,
+            targetDay: 365,
             targetLocationId: 'slums',
             message: 'Returning home.',
+            entryDay: 0,
           },
         },
         time: {
-          currentDay: 98,
+          currentDay: 364,
           currentAge: 16,
           tickAccumulator: 0,
         },
       });
       const result = processSingleTick(state);
-      // Should pause
       expect(result.isRunning).toBe(false);
-      // Should NOT clear active actions (not prison)
-      expect(result.player.activeJobActionId).toBe('fishing');
-      // Should NOT add bandit message
+      expect(result.player.currentLocationId).toBe('slums');
+      expect(result.player.pendingRelocation).toBeNull();
+      expect(result.player.messageLog).toContain('Returning home.');
       expect(result.player.messageLog).not.toContain(
         expect.stringContaining('bandit leader')
       );

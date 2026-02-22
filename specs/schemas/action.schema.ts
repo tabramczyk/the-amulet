@@ -49,6 +49,7 @@ export const ActionEffectSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('showMessage'), message: z.string() }),
   z.object({ type: z.literal('joinClan'), clanId: z.string() }),
   z.object({ type: z.literal('clearPendingRelocation') }),
+  z.object({ type: z.literal('setFoodId'), foodId: z.string().nullable() }),
 ]);
 
 export type ActionEffect = z.infer<typeof ActionEffectSchema>;

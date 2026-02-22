@@ -193,29 +193,34 @@ describe('Action System', () => {
       expect(ids).not.toContain('travel_to_barracks');
     });
 
-    it('should show bandit_give_up only on last day of prison sentence', () => {
-      const flags = { intro_complete: true };
-      const pendingRelocation = { targetDay: 100 };
-      // Not last day — should NOT include bandit_give_up
-      const actionsBefore = getAvailableClickActions('prison', defaultSkills, defaultJobs, flags, 16, [], 50, pendingRelocation);
-      expect(actionsBefore.find(a => a.id === 'bandit_give_up')).toBeUndefined();
-      // Last day — SHOULD include bandit_give_up
-      const actionsLastDay = getAvailableClickActions('prison', defaultSkills, defaultJobs, flags, 16, [], 99, pendingRelocation);
-      expect(actionsLastDay.find(a => a.id === 'bandit_give_up')).toBeDefined();
+    it('should show bandit_give_up when bandit_proposal_active flag is set', () => {
+      const flags = { intro_complete: true, bandit_proposal_active: true };
+      const actions = getAvailableClickActions('prison', defaultSkills, defaultJobs, flags, 16);
+      expect(actions.find(a => a.id === 'bandit_give_up')).toBeDefined();
     });
 
-    it('should show bandit_lift_stone only on last day of prison sentence', () => {
+    it('should not show bandit_give_up without bandit_proposal_active flag', () => {
+      const flags = { intro_complete: true };
+      const actions = getAvailableClickActions('prison', defaultSkills, defaultJobs, flags, 16);
+      expect(actions.find(a => a.id === 'bandit_give_up')).toBeUndefined();
+    });
+
+    it('should show bandit_lift_stone when bandit_proposal_active and strength >= 8', () => {
+      const flags = { intro_complete: true, bandit_proposal_active: true };
+      const skills = defaultSkills.map((s) =>
+        s.skillId === 'strength' ? { ...s, level: 8 } : s,
+      );
+      const actions = getAvailableClickActions('prison', skills, defaultJobs, flags, 16);
+      expect(actions.find(a => a.id === 'bandit_lift_stone')).toBeDefined();
+    });
+
+    it('should not show bandit_lift_stone without bandit_proposal_active flag', () => {
       const flags = { intro_complete: true };
       const skills = defaultSkills.map((s) =>
         s.skillId === 'strength' ? { ...s, level: 8 } : s,
       );
-      const pendingRelocation = { targetDay: 100 };
-      // Before last day — should NOT include bandit_lift_stone
-      const actionsBefore = getAvailableClickActions('prison', skills, defaultJobs, flags, 16, [], 50, pendingRelocation);
-      expect(actionsBefore.find(a => a.id === 'bandit_lift_stone')).toBeUndefined();
-      // Last day — SHOULD include bandit_lift_stone
-      const actionsLastDay = getAvailableClickActions('prison', skills, defaultJobs, flags, 16, [], 99, pendingRelocation);
-      expect(actionsLastDay.find(a => a.id === 'bandit_lift_stone')).toBeDefined();
+      const actions = getAvailableClickActions('prison', skills, defaultJobs, flags, 16);
+      expect(actions.find(a => a.id === 'bandit_lift_stone')).toBeUndefined();
     });
   });
 
