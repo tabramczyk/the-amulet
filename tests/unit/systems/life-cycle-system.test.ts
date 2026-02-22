@@ -419,4 +419,70 @@ describe('Life Cycle System', () => {
       expect(result.player.money).toBe(1);
     });
   });
+
+  describe('prison last day behavior', () => {
+    it('should clear active actions and add bandit message on prison last day', () => {
+      const state = makeState({
+        player: {
+          ...createInitialGameState().player,
+          currentLocationId: 'prison',
+          activeJobActionId: 'prison_meditate',
+          activeSkillActionId: 'prison_train_strength',
+          currentFoodId: 'prison_food',
+          currentHousingId: 'prison_cell',
+          pendingRelocation: {
+            targetDay: 100,
+            targetLocationId: 'slums',
+            message: "I'm finally free.",
+          },
+        },
+        time: {
+          currentDay: 98,
+          currentAge: 16,
+          tickAccumulator: 0,
+        },
+      });
+      const result = processSingleTick(state);
+      // Should pause
+      expect(result.isRunning).toBe(false);
+      // Should clear active actions
+      expect(result.player.activeJobActionId).toBeNull();
+      expect(result.player.activeSkillActionId).toBeNull();
+      // Should still be in prison (not relocated yet)
+      expect(result.player.currentLocationId).toBe('prison');
+      // Should add bandit message
+      expect(result.player.messageLog).toContain(
+        'The bandit leader approached you: "Hey boy, we need hands for a job with quick profit, if you know what I mean. Lift this stone and you\'re in."'
+      );
+    });
+
+    it('should not add bandit message on last day for non-prison locations', () => {
+      const state = makeState({
+        player: {
+          ...createInitialGameState().player,
+          currentLocationId: 'fields',
+          activeJobActionId: 'fishing',
+          pendingRelocation: {
+            targetDay: 100,
+            targetLocationId: 'slums',
+            message: 'Returning home.',
+          },
+        },
+        time: {
+          currentDay: 98,
+          currentAge: 16,
+          tickAccumulator: 0,
+        },
+      });
+      const result = processSingleTick(state);
+      // Should pause
+      expect(result.isRunning).toBe(false);
+      // Should NOT clear active actions (not prison)
+      expect(result.player.activeJobActionId).toBe('fishing');
+      // Should NOT add bandit message
+      expect(result.player.messageLog).not.toContain(
+        expect.stringContaining('bandit leader')
+      );
+    });
+  });
 });

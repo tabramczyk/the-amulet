@@ -144,12 +144,16 @@ function updateActionItems(
     (a) => a.locationId === locationId,
   );
 
+  const isLastDayPause = state.player.pendingRelocation !== null &&
+    state.time.currentDay >= state.player.pendingRelocation.targetDay - 1;
+
   for (const action of actions) {
     const cached = cache.get(action.id);
     if (!cached) continue;
 
     const isActive = activeId === action.id;
     const canDo =
+      !isLastDayPause &&
       state.isAlive &&
       areActionRequirementsMet(
         action.requirements,
@@ -158,11 +162,13 @@ function updateActionItems(
         state.player.storyFlags,
         state.time.currentAge,
         state.player.clanIds,
+        state.time.currentDay,
+        state.player.pendingRelocation,
       );
 
     // Hide actions with unmet story flag or clan requirements entirely
     const hasUnmetStoryFlag = action.requirements.some(
-      (req) => req.type === 'storyFlag' && !isRequirementMet(req, state.skills, state.jobs, state.player.storyFlags, state.time.currentAge, state.player.clanIds)
+      (req) => req.type === 'storyFlag' && !isRequirementMet(req, state.skills, state.jobs, state.player.storyFlags, state.time.currentAge, state.player.clanIds, state.time.currentDay, state.player.pendingRelocation)
     );
     const hasUnmetClan = action.requirements.some(
       (req) => req.type === 'clan' && !state.player.clanIds.includes(req.clanId)
@@ -179,7 +185,7 @@ function updateActionItems(
 
     if (!canDo) {
       const unmet = action.requirements
-        .filter((req) => !isRequirementMet(req, state.skills, state.jobs, state.player.storyFlags, state.time.currentAge, state.player.clanIds))
+        .filter((req) => !isRequirementMet(req, state.skills, state.jobs, state.player.storyFlags, state.time.currentAge, state.player.clanIds, state.time.currentDay, state.player.pendingRelocation))
         .map(formatRequirement);
       setText(cached.reqEl, unmet.length > 0 ? `Requires: ${unmet.join(', ')}` : '');
     } else {

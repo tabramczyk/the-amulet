@@ -536,6 +536,7 @@ export const CLICK_ACTIONS: Record<string, ClickAction> = {
     requirements: [
       { type: 'storyFlag', flag: 'intro_complete', value: true },
       { type: 'skill', skillId: 'strength', level: 8 },
+      { type: 'pendingRelocationLastDay' },
     ],
     effects: [
       { type: 'showMessage', message: "You pry the stone free and crawl through the tunnel. A group of bandits greets you on the other side. 'Welcome to the family,' their leader grins." },
@@ -548,17 +549,18 @@ export const CLICK_ACTIONS: Record<string, ClickAction> = {
   // Story: Prison - give up waiting
   bandit_give_up: {
     id: 'bandit_give_up',
-    name: 'Serve Your Time',
-    description: "Wait patiently for release. You're not strong enough for other options.",
+    name: 'Decline the Proposal',
+    description: "Turn down the bandit leader's offer and wait for release.",
     type: 'click',
     category: 'story',
     timeCostDays: 0,
     locationId: 'prison',
     requirements: [
       { type: 'storyFlag', flag: 'intro_complete', value: true },
+      { type: 'pendingRelocationLastDay' },
     ],
     effects: [
-      { type: 'showMessage', message: "You resign yourself to waiting. The days blur together..." },
+      { type: 'showMessage', message: "You shake your head. The bandit leader shrugs and disappears into the shadows. The next morning, the guards release you." },
       { type: 'clearPendingRelocation' },
       { type: 'changeLocation', locationId: 'slums' },
     ],

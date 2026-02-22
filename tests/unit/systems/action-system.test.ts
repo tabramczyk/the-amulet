@@ -103,6 +103,23 @@ describe('Action System', () => {
       const req: ActionRequirement = { type: 'clan', clanId: 'army' };
       expect(isRequirementMet(req, defaultSkills, defaultJobs, defaultFlags, 16, ['bandits'])).toBe(false);
     });
+
+    it('should return true for pendingRelocationLastDay on last day', () => {
+      const req = { type: 'pendingRelocationLastDay' as const };
+      const pendingRelocation = { targetDay: 100 };
+      expect(isRequirementMet(req, defaultSkills, defaultJobs, defaultFlags, 16, [], 99, pendingRelocation)).toBe(true);
+    });
+
+    it('should return false for pendingRelocationLastDay before last day', () => {
+      const req = { type: 'pendingRelocationLastDay' as const };
+      const pendingRelocation = { targetDay: 100 };
+      expect(isRequirementMet(req, defaultSkills, defaultJobs, defaultFlags, 16, [], 50, pendingRelocation)).toBe(false);
+    });
+
+    it('should return false for pendingRelocationLastDay with no pending relocation', () => {
+      const req = { type: 'pendingRelocationLastDay' as const };
+      expect(isRequirementMet(req, defaultSkills, defaultJobs, defaultFlags, 16, [], 99, null)).toBe(false);
+    });
   });
 
   describe('areActionRequirementsMet', () => {
@@ -174,6 +191,31 @@ describe('Action System', () => {
       const actions = getAvailableClickActions('village', defaultSkills, defaultJobs, flags, 16, []);
       const ids = actions.map((a) => a.id);
       expect(ids).not.toContain('travel_to_barracks');
+    });
+
+    it('should show bandit_give_up only on last day of prison sentence', () => {
+      const flags = { intro_complete: true };
+      const pendingRelocation = { targetDay: 100 };
+      // Not last day — should NOT include bandit_give_up
+      const actionsBefore = getAvailableClickActions('prison', defaultSkills, defaultJobs, flags, 16, [], 50, pendingRelocation);
+      expect(actionsBefore.find(a => a.id === 'bandit_give_up')).toBeUndefined();
+      // Last day — SHOULD include bandit_give_up
+      const actionsLastDay = getAvailableClickActions('prison', defaultSkills, defaultJobs, flags, 16, [], 99, pendingRelocation);
+      expect(actionsLastDay.find(a => a.id === 'bandit_give_up')).toBeDefined();
+    });
+
+    it('should show bandit_lift_stone only on last day of prison sentence', () => {
+      const flags = { intro_complete: true };
+      const skills = defaultSkills.map((s) =>
+        s.skillId === 'strength' ? { ...s, level: 8 } : s,
+      );
+      const pendingRelocation = { targetDay: 100 };
+      // Before last day — should NOT include bandit_lift_stone
+      const actionsBefore = getAvailableClickActions('prison', skills, defaultJobs, flags, 16, [], 50, pendingRelocation);
+      expect(actionsBefore.find(a => a.id === 'bandit_lift_stone')).toBeUndefined();
+      // Last day — SHOULD include bandit_lift_stone
+      const actionsLastDay = getAvailableClickActions('prison', skills, defaultJobs, flags, 16, [], 99, pendingRelocation);
+      expect(actionsLastDay.find(a => a.id === 'bandit_lift_stone')).toBeDefined();
     });
   });
 

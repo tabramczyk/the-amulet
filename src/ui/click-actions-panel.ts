@@ -126,11 +126,13 @@ export function updateClickActionsPanel(): void {
         state.player.storyFlags,
         state.time.currentAge,
         state.player.clanIds,
+        state.time.currentDay,
+        state.player.pendingRelocation,
       );
 
     // Hide actions with unmet story flag, exceeded maxAge, or unmet clan requirements
     const hasUnmetStoryFlag = action.requirements.some(
-      (req) => req.type === 'storyFlag' && !isRequirementMet(req, state.skills, state.jobs, state.player.storyFlags, state.time.currentAge, state.player.clanIds)
+      (req) => req.type === 'storyFlag' && !isRequirementMet(req, state.skills, state.jobs, state.player.storyFlags, state.time.currentAge, state.player.clanIds, state.time.currentDay, state.player.pendingRelocation)
     );
     const hasExceededMaxAge = action.requirements.some(
       (req) => req.type === 'age' && req.maxAge !== undefined && state.time.currentAge > req.maxAge
@@ -138,7 +140,10 @@ export function updateClickActionsPanel(): void {
     const hasUnmetClan = action.requirements.some(
       (req) => req.type === 'clan' && !state.player.clanIds.includes(req.clanId)
     );
-    const shouldHide = hasUnmetStoryFlag || hasExceededMaxAge || hasUnmetClan;
+    const hasUnmetPendingRelocation = action.requirements.some(
+      (req) => req.type === 'pendingRelocationLastDay' && !isRequirementMet(req, state.skills, state.jobs, state.player.storyFlags, state.time.currentAge, state.player.clanIds, state.time.currentDay, state.player.pendingRelocation)
+    );
+    const shouldHide = hasUnmetStoryFlag || hasExceededMaxAge || hasUnmetClan || hasUnmetPendingRelocation;
     cached.btn.style.display = shouldHide ? 'none' : '';
 
     // Track visibility for section headers
@@ -154,7 +159,7 @@ export function updateClickActionsPanel(): void {
 
     if (!canDo && action.requirements.length > 0) {
       const unmet = action.requirements
-        .filter((req) => !isRequirementMet(req, state.skills, state.jobs, state.player.storyFlags, state.time.currentAge, state.player.clanIds))
+        .filter((req) => !isRequirementMet(req, state.skills, state.jobs, state.player.storyFlags, state.time.currentAge, state.player.clanIds, state.time.currentDay, state.player.pendingRelocation))
         .map(formatRequirement);
       if (unmet.length > 0) {
         setText(cached.reqEl, `Requires: ${unmet.join(', ')}`);

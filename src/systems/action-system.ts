@@ -19,6 +19,8 @@ export function isRequirementMet(
   storyFlags: Record<string, boolean>,
   currentAge: number,
   clanIds: string[] = [],
+  currentDay: number = 0,
+  pendingRelocation: { targetDay: number } | null = null,
 ): boolean {
   switch (req.type) {
     case 'skill': {
@@ -44,6 +46,8 @@ export function isRequirementMet(
         return job !== undefined && job.level >= j.level;
       });
     }
+    case 'pendingRelocationLastDay':
+      return pendingRelocation !== null && currentDay >= pendingRelocation.targetDay - 1;
   }
 }
 
@@ -57,9 +61,11 @@ export function areActionRequirementsMet(
   storyFlags: Record<string, boolean>,
   currentAge: number,
   clanIds: string[] = [],
+  currentDay: number = 0,
+  pendingRelocation: { targetDay: number } | null = null,
 ): boolean {
   return requirements.every((req) =>
-    isRequirementMet(req, skills, jobs, storyFlags, currentAge, clanIds),
+    isRequirementMet(req, skills, jobs, storyFlags, currentAge, clanIds, currentDay, pendingRelocation),
   );
 }
 
@@ -73,11 +79,13 @@ export function getAvailableClickActions(
   storyFlags: Record<string, boolean>,
   currentAge: number,
   clanIds: string[] = [],
+  currentDay: number = 0,
+  pendingRelocation: { targetDay: number } | null = null,
 ): ClickAction[] {
   return Object.values(CLICK_ACTIONS).filter(
     (action) =>
       action.locationId === currentLocationId &&
-      areActionRequirementsMet(action.requirements, skills, jobs, storyFlags, currentAge, clanIds),
+      areActionRequirementsMet(action.requirements, skills, jobs, storyFlags, currentAge, clanIds, currentDay, pendingRelocation),
   );
 }
 
@@ -91,11 +99,13 @@ export function getAvailableContinuousActions(
   storyFlags: Record<string, boolean>,
   currentAge: number,
   clanIds: string[] = [],
+  currentDay: number = 0,
+  pendingRelocation: { targetDay: number } | null = null,
 ): ContinuousAction[] {
   return Object.values(CONTINUOUS_ACTIONS).filter(
     (action) =>
       action.locationId === currentLocationId &&
-      areActionRequirementsMet(action.requirements, skills, jobs, storyFlags, currentAge, clanIds),
+      areActionRequirementsMet(action.requirements, skills, jobs, storyFlags, currentAge, clanIds, currentDay, pendingRelocation),
   );
 }
 

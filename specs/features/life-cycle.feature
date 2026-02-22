@@ -39,3 +39,19 @@ Feature: Life Cycle
     When the game is saved
     And the game is loaded
     Then all game state should match the saved state
+
+  Scenario: Pending relocation pauses game on last day
+    Given the player has a pending relocation in 100 days
+    When 99 game ticks pass
+    Then the game should pause
+    And the player should still be at the pending relocation's origin
+
+  Scenario: Prison last day shows bandit message and clears active actions
+    Given the player is in "prison"
+    And the player has active continuous actions
+    And the player has a pending relocation in 100 days
+    When 99 game ticks pass
+    Then the game should pause
+    And the player's active job action should be cleared
+    And the player's active skill action should be cleared
+    And a bandit leader message should appear in the message log

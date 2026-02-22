@@ -124,5 +124,7 @@ export function formatRequirement(req: ActionRequirement): string {
         })
         .join(' or ');
     }
+    case 'pendingRelocationLastDay':
+      return 'Last day of sentence';
   }
 }

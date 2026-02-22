@@ -33,3 +33,8 @@ Feature: Housing System
   Scenario: Housing options are filtered by location
     Given the player is in "slums"
     Then only housing for "slums" should be available
+
+  Scenario: Prison only allows Prison Cell housing
+    Given the player is in "prison"
+    Then "Sleeping Rough" should not be a housing option
+    And "Prison Cell" should be the only housing option

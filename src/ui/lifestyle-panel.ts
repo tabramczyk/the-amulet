@@ -38,15 +38,17 @@ function buildHousingButtons(locationId: string): void {
   clearChildren(housingContainer);
   housingCache.clear();
 
-  // "None" option
-  const noneBtn = document.createElement('button');
-  noneBtn.className = 'lifestyle-option';
-  noneBtn.textContent = 'Sleeping Rough (Free)';
-  noneBtn.addEventListener('click', () => {
-    store.getState().updatePlayer({ currentHousingId: null });
-  });
-  housingContainer.appendChild(noneBtn);
-  housingCache.set('none', { btn: noneBtn });
+  // "None" option (not available in prison)
+  if (locationId !== 'prison') {
+    const noneBtn = document.createElement('button');
+    noneBtn.className = 'lifestyle-option';
+    noneBtn.textContent = 'Sleeping Rough (Free)';
+    noneBtn.addEventListener('click', () => {
+      store.getState().updatePlayer({ currentHousingId: null });
+    });
+    housingContainer.appendChild(noneBtn);
+    housingCache.set('none', { btn: noneBtn });
+  }
 
   // Location-specific options
   for (const option of Object.values(HOUSING_OPTIONS)) {

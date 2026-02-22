@@ -31,6 +31,9 @@ export const ActionRequirementSchema = z.discriminatedUnion('type', [
     type: z.literal('jobOneOf'),
     jobs: z.array(z.object({ jobId: z.string().min(1), level: z.number().int().min(0) })).min(1),
   }),
+  z.object({
+    type: z.literal('pendingRelocationLastDay'),
+  }),
 ]);
 
 export type ActionRequirement = z.infer<typeof ActionRequirementSchema>;

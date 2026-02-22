@@ -40,6 +40,22 @@ export function processSingleTick(state: GameState): GameState {
         },
       };
     }
+    // Pause on last day so player can choose (e.g., prison exit choice)
+    if (newTime.currentDay >= pr.targetDay - 1) {
+      const isPrison = state.player.currentLocationId === 'prison';
+      return {
+        ...state,
+        time: newTime,
+        isRunning: false,
+        player: isPrison ? {
+          ...state.player,
+          activeJobActionId: null,
+          activeSkillActionId: null,
+          messageLog: [...state.player.messageLog,
+            'The bandit leader approached you: "Hey boy, we need hands for a job with quick profit, if you know what I mean. Lift this stone and you\'re in."'],
+        } : state.player,
+      };
+    }
   }
 
   // Check for death
