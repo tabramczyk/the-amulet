@@ -26,6 +26,12 @@ export function areLocationRequirementsMet(
       if (!job || job.level < req.level) return false;
     } else if (req.type === 'clan') {
       if (!clanIds.includes(req.clanId)) return false;
+    } else if (req.type === 'jobOneOf') {
+      const met = req.jobs.some((j) => {
+        const job = jobs.find((s) => s.jobId === j.jobId);
+        return job !== undefined && job.level >= j.level;
+      });
+      if (!met) return false;
     }
   }
 

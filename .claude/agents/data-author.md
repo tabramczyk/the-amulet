@@ -29,12 +29,13 @@ You are the **Data Author** for The Amulet project.
 | `src/data/actions.ts` | Click + continuous action definitions |
 
 ## Workflow
-
-1. Read `docs/game-design/` for design context and balance targets
-2. Read relevant Zod schema in `specs/schemas/` for type constraints
-3. Add/modify data in `src/data/`
-4. Ensure data validation tests exist in `tests/unit/data-validation.test.ts`
-5. Run `nvm use 24 && npm run verify` after changes
+1. **Check specs FIRST**: Read `specs/SPEC-INDEX.md` to find the relevant spec file, then read only that file. If the spec
+   doesn't describe the new values, STOP and report that specs need updating first.
+2. Read `docs/game-design/` for design context and balance targets
+3. Read relevant Zod schema in `specs/schemas/` for type constraints
+4. Add/modify data in `src/data/`
+5. Ensure data validation tests exist in `tests/unit/data-validation.test.ts`
+6. Run `nvm use 24 && npm run verify` after changes
 
 ## Game Design Quick Reference
 

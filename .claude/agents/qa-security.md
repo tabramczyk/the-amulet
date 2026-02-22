@@ -10,6 +10,7 @@ You are the **QA / Security** reviewer for The Amulet project.
 ## Ownership
 
 - `tests/` — Unit, integration, and E2E tests
+- `specs/features/` — Gherkin behavior specs (shared with Architect)
 - `specs/features/step-definitions/` — Cucumber step definitions
 
 ## Responsibilities
@@ -18,6 +19,8 @@ You are the **QA / Security** reviewer for The Amulet project.
 - Review code for security constraint violations
 - Validate all specs pass
 - Enforce coverage requirements
+- **Spec-first gate**: verify that spec changes precede implementation changes.
+  Flag any change where code was modified without a corresponding spec update.
 
 ## Security Checklist
 
@@ -38,7 +41,7 @@ Review all code for these violations:
 
 ## Workflow
 
-1. Read the relevant spec in `specs/features/` before writing tests
+1. Read `specs/SPEC-INDEX.md` to find the relevant spec file, then read only that file before writing tests
 2. Write tests that match spec scenarios
 3. Run `nvm use 24 && npm run verify` after changes
 4. For full validation: `npm run verify:full` (includes features + E2E)

@@ -2,6 +2,9 @@ Feature: Locations System
   Locations control available jobs and training actions.
   Changing location stops current continuous action.
 
+  # Summary: 3 locations (slums → fields → village). Control available jobs/actions.
+  # Require job levels to unlock. Changing location stops continuous actions.
+
   Background:
     Given a new game has started
 
@@ -22,18 +25,48 @@ Feature: Locations System
     When the player travels to "fields"
     Then no continuous action should be active
 
-  Scenario: Location requires job level
-    Given the player has "farmer" job at level 3
+  Scenario: Fields requires Errand Runner level 10
+    Given the player has "errand_runner" job at level 9
+    When the player tries to travel to "fields"
+    Then travel should be unavailable
+    Because "fields" requires Errand Runner level 10
+
+  Scenario: Fields unlocks with Errand Runner level 10
+    Given the player has "errand_runner" job at level 10
+    When the player tries to travel to "fields"
+    Then travel should be available
+
+  Scenario: Village requires Woodcutter 5 OR Hunter 5
+    Given the player has "woodcutter" job at level 4
+    And the player has "hunter" job at level 4
     When the player tries to travel to "village"
     Then travel should be unavailable
-    Because "village" requires Farmer level 5
 
-  Scenario: Location unlocks when requirements met
-    Given the player has "beggar" job at level 5
-    When the player tries to travel to "fields"
+  Scenario: Village unlocks with Woodcutter level 5
+    Given the player has "woodcutter" job at level 5
+    When the player tries to travel to "village"
+    Then travel should be available
+
+  Scenario: Village unlocks with Hunter level 5
+    Given the player has "hunter" job at level 5
+    When the player tries to travel to "village"
     Then travel should be available
 
   Scenario: Available jobs change by location
     Given the player is in "fields"
-    Then "farmer" job should be available
+    Then "fisherman" job should be available
     And "beggar" job should not be available
+
+  Scenario: Slums has three jobs available
+    Given the player is in "slums"
+    Then "beggar" job should be available
+    And "scavenger" job should be available
+    And "errand_runner" job should be available
+
+  Scenario: Fields has five jobs available
+    Given the player is in "fields"
+    Then "fisherman" job should be available
+    And "farmer" job should be available
+    And "shepherd" job should be available
+    And "woodcutter" job should be available
+    And "hunter" job should be available

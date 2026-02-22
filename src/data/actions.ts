@@ -47,8 +47,56 @@ export const CONTINUOUS_ACTIONS: Record<string, ContinuousAction> = {
       { type: 'addSkillXp', skillId: 'endurance', amount: 1 },
     ],
   },
+  scavenging: {
+    id: 'scavenging',
+    name: 'Scavenging',
+    description: 'Search through refuse for anything of value.',
+    type: 'continuous',
+    category: 'job',
+    locationId: 'slums',
+    requirements: [
+      { type: 'storyFlag', flag: 'intro_complete', value: true },
+      { type: 'job', jobId: 'beggar', level: 10 },
+    ],
+    effects: [
+      { type: 'addJobXp', jobId: 'scavenger', amount: 1 },
+      { type: 'addMoney', amount: 2 },
+    ],
+  },
+  running_errands: {
+    id: 'running_errands',
+    name: 'Running Errands',
+    description: 'Deliver messages and packages across the slums.',
+    type: 'continuous',
+    category: 'job',
+    locationId: 'slums',
+    requirements: [
+      { type: 'storyFlag', flag: 'intro_complete', value: true },
+      { type: 'job', jobId: 'scavenger', level: 10 },
+      { type: 'skill', skillId: 'endurance', level: 5 },
+    ],
+    effects: [
+      { type: 'addJobXp', jobId: 'errand_runner', amount: 2 },
+      { type: 'addMoney', amount: 3 },
+    ],
+  },
 
   // Fields
+  fishing: {
+    id: 'fishing',
+    name: 'Fishing',
+    description: 'Cast your line and wait for a bite.',
+    type: 'continuous',
+    category: 'job',
+    locationId: 'fields',
+    requirements: [
+      { type: 'storyFlag', flag: 'intro_complete', value: true },
+    ],
+    effects: [
+      { type: 'addJobXp', jobId: 'fisherman', amount: 2 },
+      { type: 'addMoney', amount: 3 },
+    ],
+  },
   farming: {
     id: 'farming',
     name: 'Farming',
@@ -58,11 +106,63 @@ export const CONTINUOUS_ACTIONS: Record<string, ContinuousAction> = {
     locationId: 'fields',
     requirements: [
       { type: 'storyFlag', flag: 'intro_complete', value: true },
-      { type: 'job', jobId: 'beggar', level: 10 },
+      { type: 'job', jobId: 'fisherman', level: 5 },
+      { type: 'skill', skillId: 'strength', level: 5 },
     ],
     effects: [
       { type: 'addJobXp', jobId: 'farmer', amount: 2 },
-      { type: 'addMoney', amount: 3 },
+      { type: 'addMoney', amount: 4 },
+    ],
+  },
+  shepherding: {
+    id: 'shepherding',
+    name: 'Shepherding',
+    description: 'Tend the flocks across the meadows.',
+    type: 'continuous',
+    category: 'job',
+    locationId: 'fields',
+    requirements: [
+      { type: 'storyFlag', flag: 'intro_complete', value: true },
+      { type: 'job', jobId: 'fisherman', level: 5 },
+      { type: 'skill', skillId: 'endurance', level: 5 },
+    ],
+    effects: [
+      { type: 'addJobXp', jobId: 'shepherd', amount: 2 },
+      { type: 'addMoney', amount: 4 },
+    ],
+  },
+  woodcutting: {
+    id: 'woodcutting',
+    name: 'Woodcutting',
+    description: 'Fell trees and chop wood for the village.',
+    type: 'continuous',
+    category: 'job',
+    locationId: 'fields',
+    requirements: [
+      { type: 'storyFlag', flag: 'intro_complete', value: true },
+      { type: 'job', jobId: 'farmer', level: 10 },
+      { type: 'skill', skillId: 'strength', level: 10 },
+    ],
+    effects: [
+      { type: 'addJobXp', jobId: 'woodcutter', amount: 3 },
+      { type: 'addMoney', amount: 5 },
+    ],
+  },
+  hunting: {
+    id: 'hunting',
+    name: 'Hunting',
+    description: 'Track and hunt game in the wilderness.',
+    type: 'continuous',
+    category: 'job',
+    locationId: 'fields',
+    requirements: [
+      { type: 'storyFlag', flag: 'intro_complete', value: true },
+      { type: 'job', jobId: 'shepherd', level: 10 },
+      { type: 'skill', skillId: 'endurance', level: 10 },
+    ],
+    effects: [
+      { type: 'addJobXp', jobId: 'hunter', amount: 3 },
+      { type: 'addMoney', amount: 5 },
     ],
   },
   train_strength_fields: {
@@ -91,7 +191,6 @@ export const CONTINUOUS_ACTIONS: Record<string, ContinuousAction> = {
     requirements: [
       { type: 'storyFlag', flag: 'intro_complete', value: true },
       { type: 'skill', skillId: 'strength', level: 10 },
-      { type: 'job', jobId: 'farmer', level: 10 },
     ],
     effects: [
       { type: 'addJobXp', jobId: 'laborer', amount: 3 },
@@ -285,7 +384,7 @@ export const CLICK_ACTIONS: Record<string, ClickAction> = {
     locationId: 'slums',
     requirements: [
       { type: 'storyFlag', flag: 'intro_complete', value: true },
-      { type: 'job', jobId: 'beggar', level: 5 },
+      { type: 'job', jobId: 'errand_runner', level: 10 },
     ],
     effects: [
       { type: 'changeLocation', locationId: 'fields' },
@@ -301,7 +400,7 @@ export const CLICK_ACTIONS: Record<string, ClickAction> = {
     locationId: 'fields',
     requirements: [
       { type: 'storyFlag', flag: 'intro_complete', value: true },
-      { type: 'job', jobId: 'farmer', level: 5 },
+      { type: 'jobOneOf', jobs: [{ jobId: 'woodcutter', level: 5 }, { jobId: 'hunter', level: 5 }] },
     ],
     effects: [
       { type: 'changeLocation', locationId: 'village' },

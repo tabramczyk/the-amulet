@@ -6,7 +6,7 @@ export const LOCATIONS: Record<string, Location> = {
     name: 'The Slums',
     description: 'A grimy corner of the city. Where every life begins.',
     requirements: [],
-    availableJobIds: ['beggar'],
+    availableJobIds: ['beggar', 'scavenger', 'errand_runner'],
     availableTrainingSkillIds: ['concentration', 'endurance'],
   },
   fields: {
@@ -14,9 +14,9 @@ export const LOCATIONS: Record<string, Location> = {
     name: 'The Fields',
     description: 'Vast farmlands stretching to the horizon. Hard but honest work.',
     requirements: [
-      { type: 'job', jobId: 'beggar', level: 5 },
+      { type: 'job', jobId: 'errand_runner', level: 10 },
     ],
-    availableJobIds: ['farmer'],
+    availableJobIds: ['fisherman', 'farmer', 'shepherd', 'woodcutter', 'hunter'],
     availableTrainingSkillIds: ['strength', 'endurance'],
   },
   village: {
@@ -24,7 +24,7 @@ export const LOCATIONS: Record<string, Location> = {
     name: 'The Village',
     description: 'A bustling settlement with opportunities for the strong and clever.',
     requirements: [
-      { type: 'job', jobId: 'farmer', level: 5 },
+      { type: 'jobOneOf', jobs: [{ jobId: 'woodcutter', level: 5 }, { jobId: 'hunter', level: 5 }] },
     ],
     availableJobIds: ['laborer'],
     availableTrainingSkillIds: ['strength', 'intelligence'],

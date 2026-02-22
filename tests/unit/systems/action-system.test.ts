@@ -20,6 +20,8 @@ const defaultSkills: SkillState[] = [
 
 const defaultJobs: JobState[] = [
   { jobId: 'beggar', level: 0, xp: 0, xpToNextLevel: 10 },
+  { jobId: 'errand_runner', level: 0, xp: 0, xpToNextLevel: 10 },
+  { jobId: 'fisherman', level: 0, xp: 0, xpToNextLevel: 10 },
   { jobId: 'farmer', level: 0, xp: 0, xpToNextLevel: 10 },
   { jobId: 'laborer', level: 0, xp: 0, xpToNextLevel: 10 },
   { jobId: 'soldier', level: 0, xp: 0, xpToNextLevel: 10 },
@@ -135,9 +137,9 @@ describe('Action System', () => {
       expect(actions.length).toBe(1);
     });
 
-    it('should return travel_to_fields when beggar level 5', () => {
+    it('should return travel_to_fields when errand_runner level 10', () => {
       const jobs = defaultJobs.map((j) =>
-        j.jobId === 'beggar' ? { ...j, level: 5 } : j,
+        j.jobId === 'errand_runner' ? { ...j, level: 10 } : j,
       );
       const flags = { intro_complete: true };
       const actions = getAvailableClickActions('slums', defaultSkills, jobs, flags, 16);
@@ -194,12 +196,15 @@ describe('Action System', () => {
       expect(ids).toContain('train_strength_fields');
     });
 
-    it('should show farming when beggar level 10', () => {
+    it('should show farming when fisherman level 5 and strength 5', () => {
+      const skills = defaultSkills.map((s) =>
+        s.skillId === 'strength' ? { ...s, level: 5 } : s,
+      );
       const jobs = defaultJobs.map((j) =>
-        j.jobId === 'beggar' ? { ...j, level: 10 } : j,
+        j.jobId === 'fisherman' ? { ...j, level: 5 } : j,
       );
       const flags = { intro_complete: true };
-      const actions = getAvailableContinuousActions('fields', defaultSkills, jobs, flags, 16);
+      const actions = getAvailableContinuousActions('fields', skills, jobs, flags, 16);
       const ids = actions.map((a) => a.id);
       expect(ids).toContain('farming');
     });

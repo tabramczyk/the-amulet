@@ -2,6 +2,9 @@ Feature: Food System
   Players can buy daily food for a gold cost.
   Food is available in all locations and persists across location changes.
 
+  # Summary: Daily food purchase for gold. Persists across location changes.
+  # Lost when can't afford expenses. Costs stack with housing.
+
   Background:
     Given a new game has started
 

@@ -3,6 +3,9 @@ Feature: Daily Economy
   The net daily balance (earnings minus expenses) is displayed in the UI.
   With dual actions, earnings come from the active job action.
 
+  # Summary: Gold earned from job actions, spent on housing + food daily.
+  # Net balance = earnings - expenses. Job pay grows with level.
+
   Background:
     Given a new game has started
 

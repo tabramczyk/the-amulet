@@ -2,6 +2,9 @@ Feature: Housing System
   Players can rent housing at their current location for a daily gold cost.
   Housing is location-locked and resets when the player changes location.
 
+  # Summary: Location-locked daily housing rental. Costs gold per day.
+  # Resets on location change. Evicted when can't afford. Filtered by location.
+
   Background:
     Given a new game has started
 

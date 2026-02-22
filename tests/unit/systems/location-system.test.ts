@@ -15,7 +15,10 @@ const defaultSkills: SkillState[] = [
 
 const defaultJobs: JobState[] = [
   { jobId: 'beggar', level: 0, xp: 0, xpToNextLevel: 10 },
+  { jobId: 'errand_runner', level: 0, xp: 0, xpToNextLevel: 10 },
   { jobId: 'farmer', level: 0, xp: 0, xpToNextLevel: 10 },
+  { jobId: 'woodcutter', level: 0, xp: 0, xpToNextLevel: 10 },
+  { jobId: 'hunter', level: 0, xp: 0, xpToNextLevel: 10 },
   { jobId: 'laborer', level: 0, xp: 0, xpToNextLevel: 10 },
 ];
 
@@ -25,24 +28,31 @@ describe('Location System', () => {
       expect(areLocationRequirementsMet('slums', defaultSkills, defaultJobs)).toBe(true);
     });
 
-    it('should not allow fields without beggar level 5', () => {
+    it('should not allow fields without errand_runner level 10', () => {
       expect(areLocationRequirementsMet('fields', defaultSkills, defaultJobs)).toBe(false);
     });
 
-    it('should allow fields with beggar level 5', () => {
+    it('should allow fields with errand_runner level 10', () => {
       const jobs = defaultJobs.map((j) =>
-        j.jobId === 'beggar' ? { ...j, level: 5 } : j,
+        j.jobId === 'errand_runner' ? { ...j, level: 10 } : j,
       );
       expect(areLocationRequirementsMet('fields', defaultSkills, jobs)).toBe(true);
     });
 
-    it('should not allow village without farmer level 5', () => {
+    it('should not allow village without woodcutter/hunter level 5', () => {
       expect(areLocationRequirementsMet('village', defaultSkills, defaultJobs)).toBe(false);
     });
 
-    it('should allow village with farmer level 5', () => {
+    it('should allow village with woodcutter level 5', () => {
       const jobs = defaultJobs.map((j) =>
-        j.jobId === 'farmer' ? { ...j, level: 5 } : j,
+        j.jobId === 'woodcutter' ? { ...j, level: 5 } : j,
+      );
+      expect(areLocationRequirementsMet('village', defaultSkills, jobs)).toBe(true);
+    });
+
+    it('should allow village with hunter level 5', () => {
+      const jobs = defaultJobs.map((j) =>
+        j.jobId === 'hunter' ? { ...j, level: 5 } : j,
       );
       expect(areLocationRequirementsMet('village', defaultSkills, jobs)).toBe(true);
     });
@@ -69,12 +79,12 @@ describe('Location System', () => {
   });
 
   describe('getAvailableJobIds', () => {
-    it('should return beggar for slums', () => {
-      expect(getAvailableJobIds('slums')).toEqual(['beggar']);
+    it('should return beggar, scavenger, errand_runner for slums', () => {
+      expect(getAvailableJobIds('slums')).toEqual(['beggar', 'scavenger', 'errand_runner']);
     });
 
-    it('should return farmer for fields', () => {
-      expect(getAvailableJobIds('fields')).toEqual(['farmer']);
+    it('should return fisherman, farmer, shepherd, woodcutter, hunter for fields', () => {
+      expect(getAvailableJobIds('fields')).toEqual(['fisherman', 'farmer', 'shepherd', 'woodcutter', 'hunter']);
     });
 
     it('should return laborer for village', () => {

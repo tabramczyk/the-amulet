@@ -2,6 +2,9 @@ Feature: Reincarnation System
   Upon reincarnation, accumulated skill and job levels provide
   permanent XP bonuses in future lives.
 
+  # Summary: Lifetime skill/job levels → permanent % XP bonus (1% per level).
+  # Bonuses stack across lives. All progress resets except bonuses. Lives counter increments.
+
   Scenario: Skill levels convert to reincarnation bonus
     Given the player has reached "strength" level 15 in this life
     And the player had 10 total "strength" levels from past lives

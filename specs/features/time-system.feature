@@ -2,6 +2,9 @@ Feature: Time System
   The game uses a tick-based time system where 1 tick = 1 in-game day.
   Time only advances when the player has an active continuous action.
 
+  # Summary: 1 tick = 1 game day. ~4.46 days/real-second. Time only advances with active action.
+  # Click actions consume days. Fractional ticks accumulate. 365 days = 1 year of age.
+
   Background:
     Given a new game has started
     And the player is age 16

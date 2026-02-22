@@ -40,6 +40,7 @@ describe('Job System', () => {
 
     const defaultJobs: JobState[] = [
       { jobId: 'beggar', level: 0, xp: 0, xpToNextLevel: 10 },
+      { jobId: 'fisherman', level: 0, xp: 0, xpToNextLevel: 10 },
       { jobId: 'farmer', level: 0, xp: 0, xpToNextLevel: 10 },
       { jobId: 'laborer', level: 0, xp: 0, xpToNextLevel: 10 },
     ];
@@ -52,29 +53,29 @@ describe('Job System', () => {
       expect(areJobRequirementsMet('beggar', 'fields', defaultSkills, defaultJobs)).toBe(false);
     });
 
-    it('should not allow farmer without beggar level 10', () => {
+    it('should not allow farmer without fisherman level 5 and strength 5', () => {
       expect(areJobRequirementsMet('farmer', 'fields', defaultSkills, defaultJobs)).toBe(false);
     });
 
-    it('should allow farmer with beggar level 10 in fields', () => {
-      const jobs = defaultJobs.map((j) =>
-        j.jobId === 'beggar' ? { ...j, level: 10 } : j,
+    it('should allow farmer with fisherman level 5 and strength 5 in fields', () => {
+      const skills = defaultSkills.map((s) =>
+        s.skillId === 'strength' ? { ...s, level: 5 } : s,
       );
-      expect(areJobRequirementsMet('farmer', 'fields', defaultSkills, jobs)).toBe(true);
+      const jobs = defaultJobs.map((j) =>
+        j.jobId === 'fisherman' ? { ...j, level: 5 } : j,
+      );
+      expect(areJobRequirementsMet('farmer', 'fields', skills, jobs)).toBe(true);
     });
 
-    it('should not allow laborer without strength 10 and farmer 10', () => {
+    it('should not allow laborer without strength 10', () => {
       expect(areJobRequirementsMet('laborer', 'village', defaultSkills, defaultJobs)).toBe(false);
     });
 
-    it('should allow laborer with strength 10 and farmer 10 in village', () => {
+    it('should allow laborer with strength 10 in village', () => {
       const skills = defaultSkills.map((s) =>
         s.skillId === 'strength' ? { ...s, level: 10 } : s,
       );
-      const jobs = defaultJobs.map((j) =>
-        j.jobId === 'farmer' ? { ...j, level: 10 } : j,
-      );
-      expect(areJobRequirementsMet('laborer', 'village', skills, jobs)).toBe(true);
+      expect(areJobRequirementsMet('laborer', 'village', skills, defaultJobs)).toBe(true);
     });
 
     it('should return false for nonexistent job', () => {

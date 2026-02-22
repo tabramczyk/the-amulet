@@ -77,7 +77,7 @@ describe('Economy System', () => {
     });
 
     it('should return money amount for farming', () => {
-      expect(getDailyEarnings('farming', null)).toBe(3);
+      expect(getDailyEarnings('farming', null)).toBe(4);
     });
 
     it('should return money amount for laboring', () => {
@@ -91,8 +91,8 @@ describe('Economy System', () => {
 
     it('should sum earnings from both when both earn money', () => {
       // begging earns 1 (this is a job action but we can pass it in either slot for summing)
-      // farming earns 3
-      expect(getDailyEarnings('begging', 'farming')).toBe(4);
+      // farming earns 4
+      expect(getDailyEarnings('begging', 'farming')).toBe(5);
     });
 
     it('should include wage bonus from skills for soldier', () => {
@@ -131,8 +131,8 @@ describe('Economy System', () => {
     });
 
     it('should return zero when earnings equal expenses', () => {
-      // farming earns 3, bread costs 3 => net 0
-      expect(getNetDailyIncome('farming', null, null, 'bread')).toBe(0);
+      // begging earns 1, scraps costs 1 => net 0
+      expect(getNetDailyIncome('begging', null, null, 'scraps')).toBe(0);
     });
 
     it('should return negative when expenses exceed earnings', () => {

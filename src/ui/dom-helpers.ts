@@ -115,5 +115,14 @@ export function formatRequirement(req: ActionRequirement): string {
       const name = clan?.name ?? req.clanId;
       return `${name} member`;
     }
+    case 'jobOneOf': {
+      return req.jobs
+        .map((j) => {
+          const job = JOBS[j.jobId];
+          const name = job?.name ?? j.jobId;
+          return `${name} Lv.${j.level}`;
+        })
+        .join(' or ');
+    }
   }
 }

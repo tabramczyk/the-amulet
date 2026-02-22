@@ -2,6 +2,9 @@ Feature: Skills System
   Skills gain XP while relevant training actions are active.
   Skills have soft caps per life and are affected by reincarnation bonuses.
 
+  # Summary: Skills gain XP from training actions. Soft cap reduces XP at level 50.
+  # Concentration provides % bonus to all skills. Reincarnation gives permanent XP bonus.
+
   Background:
     Given a new game has started
 

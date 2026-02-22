@@ -3,6 +3,9 @@ Feature: Actions System
   continuous actions (progression). Players can run one job action
   and one skill action simultaneously.
 
+  # Summary: Click actions (instant, story/travel) + continuous actions (per-tick, progression).
+  # Dual action slots: one job + one skill simultaneously. Location-filtered, requirement-gated.
+
   Background:
     Given a new game has started
 

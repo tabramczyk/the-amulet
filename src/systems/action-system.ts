@@ -38,6 +38,12 @@ export function isRequirementMet(
     }
     case 'clan':
       return clanIds.includes(req.clanId);
+    case 'jobOneOf': {
+      return req.jobs.some((j) => {
+        const job = jobs.find((s) => s.jobId === j.jobId);
+        return job !== undefined && job.level >= j.level;
+      });
+    }
   }
 }
 

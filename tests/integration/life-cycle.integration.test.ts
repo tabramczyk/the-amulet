@@ -193,58 +193,66 @@ describe('Life Cycle Integration', () => {
       ).toBe(false);
     });
 
-    it('should allow farmer with beggar level 10 in fields', () => {
+    it('should allow farmer with fisherman level 5 and strength 5 in fields', () => {
       const state = getInitialState();
-      const jobs = state.jobs.map((j) =>
-        j.jobId === 'beggar' ? { ...j, level: 10 } : j,
+      const skills = state.skills.map((s) =>
+        s.skillId === 'strength' ? { ...s, level: 5 } : s,
       );
-      expect(areJobRequirementsMet('farmer', 'fields', state.skills, jobs)).toBe(true);
+      const jobs = state.jobs.map((j) =>
+        j.jobId === 'fisherman' ? { ...j, level: 5 } : j,
+      );
+      expect(areJobRequirementsMet('farmer', 'fields', skills, jobs)).toBe(true);
     });
 
-    it('should block laborer without strength 10 and farmer 10', () => {
+    it('should block laborer without strength 10', () => {
       const state = getInitialState();
       expect(
         areJobRequirementsMet('laborer', 'village', state.skills, state.jobs),
       ).toBe(false);
     });
 
-    it('should allow laborer with strength 10 and farmer 10 in village', () => {
+    it('should allow laborer with strength 10 in village', () => {
       const state = getInitialState();
       const skills = state.skills.map((s) =>
         s.skillId === 'strength' ? { ...s, level: 10 } : s,
       );
-      const jobs = state.jobs.map((j) =>
-        j.jobId === 'farmer' ? { ...j, level: 10 } : j,
-      );
-      expect(areJobRequirementsMet('laborer', 'village', skills, jobs)).toBe(true);
+      expect(areJobRequirementsMet('laborer', 'village', skills, state.jobs)).toBe(true);
     });
 
-    it('should block fields without beggar level 5', () => {
+    it('should block fields without errand_runner level 10', () => {
       const state = getInitialState();
       expect(
         areLocationRequirementsMet('fields', state.skills, state.jobs),
       ).toBe(false);
     });
 
-    it('should allow fields with beggar level 5', () => {
+    it('should allow fields with errand_runner level 10', () => {
       const state = getInitialState();
       const jobs = state.jobs.map((j) =>
-        j.jobId === 'beggar' ? { ...j, level: 5 } : j,
+        j.jobId === 'errand_runner' ? { ...j, level: 10 } : j,
       );
       expect(areLocationRequirementsMet('fields', state.skills, jobs)).toBe(true);
     });
 
-    it('should block village without farmer level 5', () => {
+    it('should block village without woodcutter/hunter level 5', () => {
       const state = getInitialState();
       expect(
         areLocationRequirementsMet('village', state.skills, state.jobs),
       ).toBe(false);
     });
 
-    it('should allow village with farmer level 5', () => {
+    it('should allow village with woodcutter level 5', () => {
       const state = getInitialState();
       const jobs = state.jobs.map((j) =>
-        j.jobId === 'farmer' ? { ...j, level: 5 } : j,
+        j.jobId === 'woodcutter' ? { ...j, level: 5 } : j,
+      );
+      expect(areLocationRequirementsMet('village', state.skills, jobs)).toBe(true);
+    });
+
+    it('should allow village with hunter level 5', () => {
+      const state = getInitialState();
+      const jobs = state.jobs.map((j) =>
+        j.jobId === 'hunter' ? { ...j, level: 5 } : j,
       );
       expect(areLocationRequirementsMet('village', state.skills, jobs)).toBe(true);
     });
@@ -300,7 +308,7 @@ describe('Life Cycle Integration', () => {
       expect(actionIds).toContain('touch_amulet');
     });
 
-    it('should not show travel to fields without beggar level 5', () => {
+    it('should not show travel to fields without errand_runner level 10', () => {
       const state = getInitialState();
       const actions = getAvailableClickActions(
         'slums',
@@ -313,10 +321,10 @@ describe('Life Cycle Integration', () => {
       expect(actionIds).not.toContain('travel_to_fields');
     });
 
-    it('should show travel to fields with beggar level 5', () => {
+    it('should show travel to fields with errand_runner level 10', () => {
       const state = getInitialState();
       const jobs = state.jobs.map((j) =>
-        j.jobId === 'beggar' ? { ...j, level: 5 } : j,
+        j.jobId === 'errand_runner' ? { ...j, level: 10 } : j,
       );
       const storyFlags = { intro_complete: true };
       const actions = getAvailableClickActions(

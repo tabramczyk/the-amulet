@@ -21,11 +21,14 @@ You are the **Implementer** for The Amulet project.
 - Systems must NOT import specific content — use data from `src/data/` via parameters
 
 ## Workflow
-
-1. Read the relevant spec in `specs/features/` before implementing
-2. Write failing tests first (TDD)
-3. Implement code to make tests pass
+1. Read `specs/SPEC-INDEX.md` to find the relevant spec file, then read only that file — if the spec doesn't describe the change
+   you've been asked to make, STOP and report to the team lead that specs need updating first
+2. Write/update failing tests matching the spec (Red phase)
+3. Implement code to make tests pass (Green phase)
 4. Run `nvm use 24 && npm run verify` after changes
+
+**IMPORTANT**: Do NOT change code without a matching spec. If specs are missing or outdated,
+report this — don't silently implement.
 
 ## Key Constraints
 

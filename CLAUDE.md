@@ -38,7 +38,10 @@ npm run format       # Prettier format
 
 ## Critical Constraints (NEVER violate)
 
-1. **Spec-first**: Update specs/schemas/ and specs/features/ BEFORE implementing
+1. **Spec-first with intent**: Every change starts with WHY (intent/context), then updates
+   specs (`specs/features/`, `specs/schemas/`) BEFORE code. Specs are the source of truth
+   for behavior. If spec and code disagree, the code is wrong. When changing specs, document
+   the reasoning — not just the new value.
 2. **Types from Zod**: ALL types derived from Zod schemas. Never hand-write interfaces for game data
 3. **Data-driven**: ALL game content in src/data/. Systems in src/systems/ must be content-agnostic
 4. **No eval()**: No eval, Function(), or string args in setTimeout/setInterval (SEC-01)
@@ -69,6 +72,10 @@ tests/
 └── e2e/            # Full browser tests
 ```
 
+## Specs Quick Reference
+
+See `specs/SPEC-INDEX.md` for a map of all feature and schema specs.
+
 ## Data Flow
 
 ```
@@ -77,14 +84,42 @@ Real Time → Game Loop (ticks) → Active Systems → Zustand Store → UI Rend
                                               localStorage (auto-save)
 ```
 
-## Workflow (for all teammates)
+## Workflow — Development Cycle (MANDATORY for all teammates)
 
-1. **Read the spec** - Check specs/features/ and specs/schemas/ for the area you're working on
-2. **Write/update spec** - If spec doesn't exist or needs changes, update it FIRST
-3. **Write failing tests** - Unit tests in tests/unit/, matching the spec
-4. **Implement** - Write code to make tests pass
-5. **Verify** - Run `npm run verify` (must pass)
-6. **Update docs** - If behavior changed, update relevant doc in docs/
+Every change follows these phases IN ORDER. Skipping or reordering is a bug.
+
+### Phase 0 — Intent (understand WHY)
+- Clarify the purpose of the change: what problem does it solve? What's the goal?
+- For non-trivial changes, capture reasoning in the commit message or relevant ADR
+- This prevents "structurally correct but misaligned" changes
+
+### Phase 1 — Spec (update the source of truth)
+- Update Gherkin features in `specs/features/` to describe desired behavior
+- Update Zod schemas in `specs/schemas/` if data structures change
+- Keep specs focused on **behavior and constraints**, not implementation details
+- Specs are authoritative: if spec and code disagree, the code is wrong
+- Consult `specs/SPEC-INDEX.md` to find the relevant spec file — read only that file,
+  not all specs
+
+### Phase 2 — Test (prove the change is captured)
+- Write/update unit tests in `tests/unit/` to match the new spec
+- Tests SHOULD fail before implementation (Red phase of TDD)
+- A test that passes without code changes may mean it's not testing the right thing
+
+### Phase 3 — Implement (make tests pass)
+- Change code in `src/` to satisfy the updated tests
+- Keep changes minimal — only what's needed to make tests pass
+
+### Phase 4 — Validate (verify + review)
+- Run `npm run verify` (lint + typecheck + tests must pass)
+- QA/Security reviews for security constraint violations
+- Update docs in `docs/` if behavior changed
+
+### When to be strict vs. lightweight
+- **Zod schemas** (data contracts): Always strict — update before implementation
+- **Gherkin features** (behavior): Strict for requirements and key behaviors.
+  Lightweight for exploratory/prototyping work — capture intent, refine spec after learning.
+- **Within a component**: TDD-iterate freely. The spec defines the boundary, not every detail.
 
 ## Game Design Quick Reference
 
@@ -105,12 +140,18 @@ docs, configs — nothing). The team lead's only job is to **understand, plan, a
 
 1. **Understand the request** — read relevant specs, schemas, and code to grasp scope
 2. **Plan the approach** — decide which agents are needed and what each should do
-3. **Delegate everything** — spawn the right agents (by `subagent_type`) for ALL work,
+3. **Enforce development cycle ordering** — delegate in phase order:
+   - First: spec updates (Architect for schemas, QA/Architect for features)
+   - Then: test updates (QA/Security, Implementer)
+   - Then: implementation (Implementer, Data Author)
+   - Finally: validation (QA/Security)
+   Never delegate implementation before specs are updated.
+4. **Delegate everything** — spawn the right agents (by `subagent_type`) for ALL work,
    including schema changes, spec updates, implementation, UI, tests, and docs
-4. **Parallelize** — launch independent tasks simultaneously using background agents
-5. **Coordinate** — monitor agent progress, resolve blockers, ensure integration
-6. **Verify** — run `npm run verify` after all agents complete to confirm integration
-7. **Clean up** — shut down agents and delete the team when done
+5. **Parallelize** — launch independent tasks simultaneously using background agents
+6. **Coordinate** — monitor agent progress, resolve blockers, ensure integration
+7. **Verify** — run `npm run verify` after all agents complete to confirm integration
+8. **Clean up** — shut down agents and delete the team when done
 
 The team lead must NOT use Write, Edit, or NotebookEdit tools. All file changes — including
 schemas, specs, data definitions, and documentation — must be delegated to the appropriate agent.
@@ -125,7 +166,7 @@ prompt pre-configured. Spawn agents with `subagent_type: "<agent-name>"` in the 
 | Architect | `.claude/agents/architect.md` | opus | specs/schemas/, docs/adr/, docs/architecture/ |
 | Implementer | `.claude/agents/implementer.md` | sonnet | src/core/, src/systems/, src/state/ |
 | UI Developer | `.claude/agents/ui-developer.md` | sonnet | src/ui/, src/styles/, index.html |
-| QA / Security | `.claude/agents/qa-security.md` | sonnet | tests/, specs/features/step-definitions/ |
+| QA / Security | `.claude/agents/qa-security.md` | sonnet | tests/, specs/features/ (shared with Architect) |
 | Data Author | `.claude/agents/data-author.md` | sonnet | src/data/, specs/schemas/ |
 
 ### How to choose agents
@@ -165,3 +206,10 @@ See docs/adr/README.md for all architecture decisions.
 | src/core/ | 85% |
 | src/data/ (validation) | 100% |
 | Global | 80% |
+
+## Context Management
+
+- Use `/compact` when context reaches ~80% to summarize and free space
+- Use `/clear` between unrelated tasks to start fresh
+- Agents should read `specs/SPEC-INDEX.md` first, then load only relevant spec files
+- Keep CLAUDE.md under 250 lines — move detailed content to referenced files

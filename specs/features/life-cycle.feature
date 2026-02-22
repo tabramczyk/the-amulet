@@ -2,6 +2,9 @@ Feature: Life Cycle
   The player lives from age 16 until death, then reincarnates
   through the amulet.
 
+  # Summary: Start age 16 in slums. Die ~age 58. Amulet glows near death.
+  # Touch amulet → reincarnate with bonuses. Save/load preserves state.
+
   Scenario: New game starts at age 16
     Given a brand new game with no save data
     When the game starts
