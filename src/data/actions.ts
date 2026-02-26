@@ -468,6 +468,21 @@ export const CLICK_ACTIONS: Record<string, ClickAction> = {
       { type: 'triggerReincarnation' },
     ],
   },
+  touch_amulet_voluntary: {
+    id: 'touch_amulet_voluntary',
+    name: 'Touch the Amulet',
+    description: 'The amulet pulses with an otherworldly glow. Reach out and start a new life...',
+    type: 'click',
+    category: 'story',
+    timeCostDays: 0,
+    locationId: 'any',
+    requirements: [
+      { type: 'storyFlag', flag: 'amulet_awakening', value: true },
+    ],
+    effects: [
+      { type: 'triggerReincarnation' },
+    ],
+  },
 
   // Story: Join the Army (village)
   join_army: {

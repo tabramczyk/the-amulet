@@ -27,11 +27,11 @@ let lastLocationId: string | null = null;
 
 export function createContinuousActionsPanel(): HTMLElement {
   panel = el('div', { className: 'panel' });
-  panel.appendChild(el('h2', { className: 'panel__title', text: 'Continuous Actions' }));
+  panel.appendChild(el('h2', { className: 'panel__title', text: 'Daily Activities', title: 'Ongoing activities that progress each day' }));
 
   // Job Actions section
   jobSection = el('div', { className: 'continuous-actions-section' });
-  jobSection.appendChild(el('h3', { className: 'continuous-actions-section__title', text: 'Job Actions' }));
+  jobSection.appendChild(el('h3', { className: 'continuous-actions-section__title', text: 'Work', title: 'Jobs earn money and experience each day. You can have one active job.' }));
   jobActiveIndicator = el('div', { className: 'continuous-action-active-indicator' });
   jobSection.appendChild(jobActiveIndicator);
   jobListContainer = el('div', { className: 'continuous-actions' });
@@ -39,7 +39,7 @@ export function createContinuousActionsPanel(): HTMLElement {
 
   // Skill Actions section
   skillSection = el('div', { className: 'continuous-actions-section' });
-  skillSection.appendChild(el('h3', { className: 'continuous-actions-section__title', text: 'Skill Actions' }));
+  skillSection.appendChild(el('h3', { className: 'continuous-actions-section__title', text: 'Training', title: 'Train skills to unlock new options. You can train one skill at a time.' }));
   skillActiveIndicator = el('div', { className: 'continuous-action-active-indicator' });
   skillSection.appendChild(skillActiveIndicator);
   skillListContainer = el('div', { className: 'continuous-actions' });
@@ -75,7 +75,7 @@ function buildActionRows(locationId: string): void {
   skillActionCache.clear();
 
   const allActions = Object.values(CONTINUOUS_ACTIONS).filter(
-    (a) => a.locationId === locationId,
+    (a) => a.locationId === locationId || a.locationId === 'any',
   );
 
   for (const action of allActions) {
@@ -141,7 +141,7 @@ function updateActionItems(
   locationId: string,
 ): void {
   const actions = Object.values(CONTINUOUS_ACTIONS).filter(
-    (a) => a.locationId === locationId,
+    (a) => a.locationId === locationId || a.locationId === 'any',
   );
 
   for (const action of actions) {

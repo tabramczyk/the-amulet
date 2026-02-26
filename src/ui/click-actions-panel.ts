@@ -4,6 +4,7 @@ import type { ClickAction } from '../../specs/schemas';
 import { isRequirementMet, areActionRequirementsMet } from '../systems/action-system';
 import { applyClickActionEffects } from '../systems/life-cycle-system';
 import { el, clearChildren, button, setText, formatRequirement } from './dom-helpers';
+import { showReincarnationDialog } from './reincarnation-dialog';
 
 let listContainer: HTMLElement;
 let panel: HTMLElement;
@@ -22,13 +23,19 @@ let lastLocationId: string | null = null;
 
 export function createClickActionsPanel(): HTMLElement {
   panel = el('div', { className: 'panel' });
-  panel.appendChild(el('h2', { className: 'panel__title', text: 'Actions' }));
+  panel.appendChild(el('h2', { className: 'panel__title', text: 'Actions', title: 'One-time actions you can take. Each costs days from your life.' }));
   listContainer = el('div', { className: 'click-actions' });
   panel.appendChild(listContainer);
   return panel;
 }
 
-function executeClickAction(action: ClickAction): void {
+async function executeClickAction(action: ClickAction): Promise<void> {
+  // If action triggers reincarnation, show confirmation dialog first
+  if (action.effects.some((e) => e.type === 'triggerReincarnation')) {
+    const confirmed = await showReincarnationDialog(store.getState());
+    if (!confirmed) return;
+  }
+
   const state = store.getState();
   const newState = applyClickActionEffects(state, action.effects, action.timeCostDays);
 
@@ -51,20 +58,20 @@ function buildClickActionRows(locationId: string): void {
 
   // Create Story section
   storySection = el('div', { className: 'click-actions-section' });
-  storyHeader = el('h3', { className: 'click-actions-section__title', text: 'Story' });
+  storyHeader = el('h3', { className: 'click-actions-section__title', text: 'Story', title: 'Key story moments and decisions' });
   storyContainer = el('div', { className: 'click-actions' });
   storySection.appendChild(storyHeader);
   storySection.appendChild(storyContainer);
 
   // Create Actions section
   actionsSection = el('div', { className: 'click-actions-section' });
-  actionsHeader = el('h3', { className: 'click-actions-section__title', text: 'Actions' });
+  actionsHeader = el('h3', { className: 'click-actions-section__title', text: 'Actions', title: 'Travel and other one-time actions' });
   actionsContainer = el('div', { className: 'click-actions' });
   actionsSection.appendChild(actionsHeader);
   actionsSection.appendChild(actionsContainer);
 
   const actions = Object.values(CLICK_ACTIONS).filter(
-    (a) => a.locationId === locationId,
+    (a) => a.locationId === locationId || a.locationId === 'any',
   );
 
   for (const action of actions) {
@@ -107,7 +114,7 @@ export function updateClickActionsPanel(): void {
   }
 
   const actions = Object.values(CLICK_ACTIONS).filter(
-    (a) => a.locationId === locationId,
+    (a) => a.locationId === locationId || a.locationId === 'any',
   );
 
   let storyVisible = false;

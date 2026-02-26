@@ -422,6 +422,66 @@ describe('Life Cycle System', () => {
     });
   });
 
+  describe('amulet awakening at age 30', () => {
+    // Age 30 = STARTING_AGE (16) + 14 years = 14 * 365 = 5110 days
+    const age30Day = (30 - 16) * 365; // 5110
+
+    it('should set amulet_awakening flag and log message when reaching age 30', () => {
+      const state = makeState({
+        time: {
+          currentDay: age30Day - 1, // one tick before age 30
+          currentAge: 29,
+          tickAccumulator: 0,
+        },
+        player: {
+          ...createInitialGameState().player,
+          activeJobActionId: 'begging',
+        },
+      });
+      const result = processSingleTick(state);
+      expect(result.player.storyFlags['amulet_awakening']).toBe(true);
+      expect(result.player.messageLog.some(m => m.includes('The Amulet begins to glow faintly'))).toBe(true);
+    });
+
+    it('should not block game progression (non-blocking event)', () => {
+      const state = makeState({
+        isRunning: true,
+        time: {
+          currentDay: age30Day - 1,
+          currentAge: 29,
+          tickAccumulator: 0,
+        },
+        player: {
+          ...createInitialGameState().player,
+          activeJobActionId: 'begging',
+        },
+      });
+      const result = processSingleTick(state);
+      // game continues — isRunning stays true, actions are preserved
+      expect(result.isRunning).toBe(true);
+      expect(result.player.activeJobActionId).toBe('begging');
+      expect(result.time.currentDay).toBe(age30Day);
+    });
+
+    it('should not fire amulet_awakening if flag is already set', () => {
+      const state = makeState({
+        time: {
+          currentDay: age30Day - 1,
+          currentAge: 29,
+          tickAccumulator: 0,
+        },
+        player: {
+          ...createInitialGameState().player,
+          activeJobActionId: 'begging',
+          storyFlags: { amulet_awakening: true },
+        },
+      });
+      const result = processSingleTick(state);
+      // Message should not appear again
+      expect(result.player.messageLog.filter(m => m.includes('The Amulet begins to glow faintly')).length).toBe(0);
+    });
+  });
+
   describe('prison timed events', () => {
     it('should steal meals on prison day 30', () => {
       const state = makeState({

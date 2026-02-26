@@ -13,7 +13,8 @@ export function createMessageLogPanel(): HTMLElement {
 
   const title = el('h3', {
     className: 'panel__title',
-    text: 'Story'
+    text: 'Story',
+    title: 'A log of events in your current life',
   });
 
   messagesContainer = el('div', { className: 'message-log__messages' });

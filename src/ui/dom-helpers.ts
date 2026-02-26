@@ -11,12 +11,13 @@ import { CLANS } from '../data/clans';
 /** Create an element with optional class names and text content. */
 export function el<K extends keyof HTMLElementTagNameMap>(
   tag: K,
-  opts?: { className?: string; text?: string; id?: string },
+  opts?: { className?: string; text?: string; id?: string; title?: string },
 ): HTMLElementTagNameMap[K] {
   const element = document.createElement(tag);
   if (opts?.className) element.className = opts.className;
   if (opts?.text) element.textContent = opts.text;
   if (opts?.id) element.id = opts.id;
+  if (opts?.title) element.title = opts.title;
   return element;
 }
 

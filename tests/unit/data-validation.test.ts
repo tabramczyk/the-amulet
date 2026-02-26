@@ -141,6 +141,7 @@ describe('Data Validation', () => {
 
     it('should reference valid locations', () => {
       for (const action of Object.values(CLICK_ACTIONS)) {
+        if (action.locationId === 'any') continue; // global action, not location-specific
         expect(LOCATIONS[action.locationId]).toBeDefined();
       }
     });

@@ -86,6 +86,22 @@ export function processSingleTick(state: GameState): GameState {
     }
   }
 
+  // Amulet awakening at age 30 (non-blocking event)
+  if (newTime.currentAge >= 30 && !state.player.storyFlags['amulet_awakening']) {
+    state = {
+      ...state,
+      player: {
+        ...state.player,
+        storyFlags: {
+          ...state.player.storyFlags,
+          amulet_awakening: true,
+        },
+        messageLog: [...state.player.messageLog,
+          'The Amulet begins to glow faintly. You feel a strange power emanating from it... the cold, inevitable touch of death itself. It whispers of rebirth.'],
+      },
+    };
+  }
+
   // Check for death
   if (newTime.currentAge >= DEATH_THRESHOLD_AGE) {
     return {

@@ -154,7 +154,7 @@ export const store = createStore<GameStore>()(
           time: createInitialTimeState(),
           player: {
             ...createInitialPlayerState(),
-            storyFlags: { intro_complete: true },
+            storyFlags: {},
             messageLog: [INITIAL_MESSAGE],
           },
           skills: createInitialSkillStates(),

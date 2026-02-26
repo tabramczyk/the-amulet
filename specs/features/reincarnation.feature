@@ -32,6 +32,8 @@ Feature: Reincarnation System
     And money should be 0
     And the player should be in "slums"
     And the player should be age 16
+    And all story flags should be reset
+    And the intro story sequence should be available again
 
   Scenario: Lives lived counter increments
     Given the player has lived 3 previous lives
@@ -43,3 +45,19 @@ Feature: Reincarnation System
     And the player is training "strength" with base XP of 1
     When 1 game tick passes
     Then the effective XP gained should be 1.2
+
+  Scenario: Player can voluntarily reincarnate after amulet awakening
+    Given the player is age 30 or older
+    And the "amulet_awakening" story flag is set
+    When the player performs "touch_amulet_voluntary" action
+    And confirms the reincarnation dialog
+    Then the player should reincarnate
+    And reincarnation bonuses should be applied
+    And the player should be age 16
+
+  Scenario: Reincarnation confirmation dialog shows bonus preview
+    Given the player has reached "strength" level 10 in this life
+    And the player had 5 total "strength" levels from past lives
+    When the player opens the voluntary reincarnation dialog
+    Then the dialog should show "Strength: +5% → +15% XP"
+    And the dialog should have "Touch the Amulet" and "Step Away" buttons

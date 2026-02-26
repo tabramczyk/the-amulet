@@ -67,3 +67,17 @@ Feature: Life Cycle
     And the player's active skill action should be cleared
     And a bandit leader message should appear in the message log
     And the "bandit_proposal_active" story flag should be set
+
+  Scenario: Amulet awakens at age 30
+    Given the player is alive and age 30
+    And the "amulet_awakening" story flag is NOT set
+    When 1 game tick passes reaching age 30
+    Then the "amulet_awakening" story flag should be set
+    And a message about the amulet beginning to glow should appear in the message log
+    And the game should continue running (non-blocking event)
+
+  Scenario: Intro story replays after reincarnation
+    Given the player has reincarnated
+    Then story flags should be empty
+    And the "Take the Amulet" action should be available
+    And the intro story sequence should proceed as in the first life

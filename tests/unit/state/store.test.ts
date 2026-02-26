@@ -297,6 +297,14 @@ describe('Game Store', () => {
       store.getState().resetForReincarnation();
       expect(store.getState().player.clanIds).toEqual([]);
     });
+
+    it('should reset story flags to empty on reincarnation', () => {
+      store.getState().updatePlayer({
+        storyFlags: { intro_complete: true, amulet_awakening: true },
+      });
+      store.getState().resetForReincarnation();
+      expect(store.getState().player.storyFlags).toEqual({});
+    });
   });
 
   describe('resetGame', () => {
