@@ -1,10 +1,12 @@
 import type { GameState, TickEffect, ActionEffect } from '../../specs/schemas';
-import { advanceTime, DEATH_THRESHOLD_AGE } from '../core/time';
+import { advanceTime } from '../core/time';
 import { processSkillXpGain, getConcentrationLevel } from './skill-system';
 import { processJobXpGain } from './job-system';
 import { getActiveTickEffects, getJobIdFromAction } from './action-system';
 import { getDailyExpenses, getLifestyleXpMultiplier } from './economy-system';
 import { JOBS } from '../data/jobs';
+import { LOCATIONS } from '../data/locations';
+import { evaluateTriggeredEvents } from './event-system';
 
 /**
  * Process a single tick for the game state. Returns new game state.
@@ -40,83 +42,18 @@ export function processSingleTick(state: GameState): GameState {
         },
       };
     }
-
-    // Prison-specific timed events
-    const isPrison = state.player.currentLocationId === 'prison';
-    if (isPrison && pr.entryDay !== undefined) {
-      const prisonDay = newTime.currentDay - pr.entryDay;
-
-      // Day 100: Bandit proposal (pauses game)
-      if (prisonDay >= 100 && !state.player.storyFlags['bandit_proposal_shown']) {
-        return {
-          ...state,
-          time: newTime,
-          isRunning: false,
-          player: {
-            ...state.player,
-            activeJobActionId: null,
-            activeSkillActionId: null,
-            storyFlags: {
-              ...state.player.storyFlags,
-              bandit_proposal_active: true,
-              bandit_proposal_shown: true,
-            },
-            messageLog: [...state.player.messageLog,
-              'The bandit leader approached you: "Hey boy, we need hands for a job with quick profit, if you know what I mean. Lift this stone and you\'re in."'],
-          },
-        };
-      }
-
-      // Day 30: Meal stealing (non-blocking, modifies state and continues)
-      if (prisonDay >= 30 && !state.player.storyFlags['prison_meals_stolen']) {
-        state = {
-          ...state,
-          player: {
-            ...state.player,
-            currentFoodId: null,
-            storyFlags: {
-              ...state.player.storyFlags,
-              prison_meals_stolen: true,
-            },
-            messageLog: [...state.player.messageLog,
-              'The other prisoners have started stealing your meals. You go hungry now.'],
-          },
-        };
-      }
-    }
   }
 
-  // Amulet awakening at age 30 (non-blocking event)
-  if (newTime.currentAge >= 30 && !state.player.storyFlags['amulet_awakening']) {
-    state = {
-      ...state,
-      player: {
-        ...state.player,
-        storyFlags: {
-          ...state.player.storyFlags,
-          amulet_awakening: true,
-        },
-        messageLog: [...state.player.messageLog,
-          'The Amulet begins to glow faintly. You feel a strange power emanating from it... the cold, inevitable touch of death itself. It whispers of rebirth.'],
-      },
-    };
+  // Evaluate data-driven triggered events.
+  // Use isRunning: true as a baseline so blocking events reliably signal via isRunning: false.
+  let eventState: GameState = { ...state, time: newTime, isRunning: true };
+  eventState = evaluateTriggeredEvents(eventState);
+  if (!eventState.isRunning) {
+    // A blocking event fired — return immediately with game paused
+    return eventState;
   }
-
-  // Check for death
-  if (newTime.currentAge >= DEATH_THRESHOLD_AGE) {
-    return {
-      ...state,
-      time: newTime,
-      isRunning: false,
-      player: {
-        ...state.player,
-        activeJobActionId: null,
-        activeSkillActionId: null,
-        currentLocationId: 'death_gate',
-        storyFlags: { ...state.player.storyFlags, amulet_glowing: true },
-      },
-    };
-  }
+  // No blocking event — continue with tick processing
+  state = eventState;
 
   // Get tick effects from both active continuous actions
   const jobEffects = getActiveTickEffects(state.player.activeJobActionId);
@@ -206,8 +143,8 @@ export function processMultipleTicks(state: GameState, ticks: number): GameState
   let current = state;
   for (let i = 0; i < ticks; i++) {
     current = processSingleTick(current);
-    // Stop processing if the player died
-    if (!current.isRunning && current.player.storyFlags['amulet_glowing']) {
+    // Stop processing if any blocking event halted the game
+    if (!current.isRunning) {
       break;
     }
   }
@@ -285,7 +222,7 @@ export function applyClickActionEffects(
   return newState;
 }
 
-function applySingleClickEffect(state: GameState, effect: ActionEffect): GameState {
+export function applySingleClickEffect(state: GameState, effect: ActionEffect): GameState {
   switch (effect.type) {
     case 'setStoryFlag':
       return {
@@ -297,16 +234,7 @@ function applySingleClickEffect(state: GameState, effect: ActionEffect): GameSta
       };
 
     case 'changeLocation': {
-      const isPrison = effect.locationId === 'prison';
-      const pendingRelocation = isPrison
-        ? {
-            targetDay: state.time.currentDay + 365,
-            targetLocationId: 'slums' as const,
-            message: "I'm finally free.",
-            entryDay: state.time.currentDay,
-          }
-        : state.player.pendingRelocation;
-      return {
+      let newState: GameState = {
         ...state,
         isRunning: false,
         player: {
@@ -314,10 +242,16 @@ function applySingleClickEffect(state: GameState, effect: ActionEffect): GameSta
           currentLocationId: effect.locationId,
           activeJobActionId: null,
           activeSkillActionId: null,
-          pendingRelocation,
-          ...(isPrison ? { currentFoodId: 'prison_food', currentHousingId: 'prison_cell' } : {}),
         },
       };
+      // Apply location entry effects (data-driven, replaces hardcoded location setup)
+      const location = LOCATIONS[effect.locationId];
+      if (location?.entryEffects) {
+        for (const entryEffect of location.entryEffects) {
+          newState = applySingleClickEffect(newState, entryEffect);
+        }
+      }
+      return newState;
     }
 
     case 'addMoney':
@@ -387,6 +321,29 @@ function applySingleClickEffect(state: GameState, effect: ActionEffect): GameSta
         player: {
           ...state.player,
           currentFoodId: effect.foodId,
+        },
+      };
+
+    case 'setHousingId':
+      return {
+        ...state,
+        player: {
+          ...state.player,
+          currentHousingId: effect.housingId,
+        },
+      };
+
+    case 'setPendingRelocation':
+      return {
+        ...state,
+        player: {
+          ...state.player,
+          pendingRelocation: {
+            targetDay: state.time.currentDay + effect.durationDays,
+            targetLocationId: effect.targetLocationId,
+            ...(effect.message ? { message: effect.message } : {}),
+            ...(effect.trackEntryDay ? { entryDay: state.time.currentDay } : {}),
+          },
         },
       };
   }

@@ -120,6 +120,122 @@ describe('Action System', () => {
       const req = { type: 'pendingRelocationLastDay' as const };
       expect(isRequirementMet(req, defaultSkills, defaultJobs, defaultFlags, 16, [], 99, null)).toBe(false);
     });
+
+    // --- New requirement types (Phase 2 — Red phase, implementation pending) ---
+
+    describe('location requirement', () => {
+      it('should return true when currentLocationId matches', () => {
+        const req: ActionRequirement = { type: 'location', locationId: 'prison' };
+        expect(
+          isRequirementMet(req, defaultSkills, defaultJobs, defaultFlags, 16, [], 0, null, 'prison'),
+        ).toBe(true);
+      });
+
+      it('should return false when currentLocationId does not match', () => {
+        const req: ActionRequirement = { type: 'location', locationId: 'prison' };
+        expect(
+          isRequirementMet(req, defaultSkills, defaultJobs, defaultFlags, 16, [], 0, null, 'slums'),
+        ).toBe(false);
+      });
+
+      it('should return false when currentLocationId is undefined', () => {
+        const req: ActionRequirement = { type: 'location', locationId: 'prison' };
+        expect(
+          isRequirementMet(req, defaultSkills, defaultJobs, defaultFlags, 16, [], 0, null, undefined),
+        ).toBe(false);
+      });
+    });
+
+    describe('relocationDay requirement', () => {
+      const pendingWithEntryDay = { targetDay: 400, targetLocationId: 'slums', entryDay: 10 };
+
+      it('should return true when elapsed days >= minDay', () => {
+        const req: ActionRequirement = { type: 'relocationDay', minDay: 30 };
+        // currentDay=40, entryDay=10 => elapsed=30, 30 >= 30 is true
+        expect(
+          isRequirementMet(req, defaultSkills, defaultJobs, defaultFlags, 16, [], 40, pendingWithEntryDay, 'prison'),
+        ).toBe(true);
+      });
+
+      it('should return false when elapsed days < minDay', () => {
+        const req: ActionRequirement = { type: 'relocationDay', minDay: 30 };
+        // currentDay=39, entryDay=10 => elapsed=29, 29 >= 30 is false
+        expect(
+          isRequirementMet(req, defaultSkills, defaultJobs, defaultFlags, 16, [], 39, pendingWithEntryDay, 'prison'),
+        ).toBe(false);
+      });
+
+      it('should return true when elapsed days <= maxDay', () => {
+        const req: ActionRequirement = { type: 'relocationDay', maxDay: 50 };
+        // currentDay=40, entryDay=10 => elapsed=30, 30 <= 50 is true
+        expect(
+          isRequirementMet(req, defaultSkills, defaultJobs, defaultFlags, 16, [], 40, pendingWithEntryDay, 'prison'),
+        ).toBe(true);
+      });
+
+      it('should return false when elapsed days > maxDay', () => {
+        const req: ActionRequirement = { type: 'relocationDay', maxDay: 20 };
+        // currentDay=40, entryDay=10 => elapsed=30, 30 <= 20 is false
+        expect(
+          isRequirementMet(req, defaultSkills, defaultJobs, defaultFlags, 16, [], 40, pendingWithEntryDay, 'prison'),
+        ).toBe(false);
+      });
+
+      it('should return true when elapsed days satisfies both minDay and maxDay', () => {
+        const req: ActionRequirement = { type: 'relocationDay', minDay: 20, maxDay: 40 };
+        // currentDay=40, entryDay=10 => elapsed=30, 20 <= 30 <= 40 is true
+        expect(
+          isRequirementMet(req, defaultSkills, defaultJobs, defaultFlags, 16, [], 40, pendingWithEntryDay, 'prison'),
+        ).toBe(true);
+      });
+
+      it('should return false when no pendingRelocation exists', () => {
+        const req: ActionRequirement = { type: 'relocationDay', minDay: 30 };
+        expect(
+          isRequirementMet(req, defaultSkills, defaultJobs, defaultFlags, 16, [], 40, null, 'prison'),
+        ).toBe(false);
+      });
+
+      it('should return false when pendingRelocation has no entryDay', () => {
+        const req: ActionRequirement = { type: 'relocationDay', minDay: 30 };
+        const pendingNoEntryDay = { targetDay: 400, targetLocationId: 'slums' };
+        expect(
+          isRequirementMet(req, defaultSkills, defaultJobs, defaultFlags, 16, [], 40, pendingNoEntryDay, 'prison'),
+        ).toBe(false);
+      });
+    });
+
+    describe('hasPendingRelocation requirement', () => {
+      const somePendingRelocation = { targetDay: 400, targetLocationId: 'slums' };
+
+      it('should return true when value=true and pendingRelocation exists', () => {
+        const req: ActionRequirement = { type: 'hasPendingRelocation', value: true };
+        expect(
+          isRequirementMet(req, defaultSkills, defaultJobs, defaultFlags, 16, [], 0, somePendingRelocation, 'prison'),
+        ).toBe(true);
+      });
+
+      it('should return false when value=true and pendingRelocation is null', () => {
+        const req: ActionRequirement = { type: 'hasPendingRelocation', value: true };
+        expect(
+          isRequirementMet(req, defaultSkills, defaultJobs, defaultFlags, 16, [], 0, null, 'prison'),
+        ).toBe(false);
+      });
+
+      it('should return true when value=false and pendingRelocation is null', () => {
+        const req: ActionRequirement = { type: 'hasPendingRelocation', value: false };
+        expect(
+          isRequirementMet(req, defaultSkills, defaultJobs, defaultFlags, 16, [], 0, null, 'prison'),
+        ).toBe(true);
+      });
+
+      it('should return false when value=false and pendingRelocation exists', () => {
+        const req: ActionRequirement = { type: 'hasPendingRelocation', value: false };
+        expect(
+          isRequirementMet(req, defaultSkills, defaultJobs, defaultFlags, 16, [], 0, somePendingRelocation, 'prison'),
+        ).toBe(false);
+      });
+    });
   });
 
   describe('areActionRequirementsMet', () => {

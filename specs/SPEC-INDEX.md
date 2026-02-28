@@ -29,3 +29,4 @@ Quick-reference for agents. Read the relevant spec file, not all of them.
 | Housing | housing.schema.ts | Housing tiers |
 | Food | food.schema.ts | Food options |
 | Clans | clan.schema.ts | Clan definitions |
+| Triggered Events | triggered-event.schema.ts | Timed/conditional events with conditions, effects, priority |

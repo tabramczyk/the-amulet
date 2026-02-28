@@ -1,9 +1,12 @@
 Feature: Life Cycle
   The player lives from age 16 until death, then reincarnates
-  through the amulet.
+  through the amulet. Timed events (prison events, amulet awakening,
+  death) are data-driven via the triggered event system.
 
   # Summary: Start age 16 in slums. Die ~age 58. Amulet glows near death.
   # Touch amulet → reincarnate with bonuses. Save/load preserves state.
+  # Events are evaluated each tick, sorted by priority (highest first).
+  # Blocking events pause the game and halt further tick processing.
 
   Scenario: New game starts at age 16
     Given a brand new game with no save data
@@ -81,3 +84,34 @@ Feature: Life Cycle
     Then story flags should be empty
     And the "Take the Amulet" action should be available
     And the intro story sequence should proceed as in the first life
+
+  Scenario: Triggered events are evaluated each tick in priority order
+    Given multiple triggered events could fire on the same tick
+    When a game tick is processed
+    Then events should be evaluated in descending priority order
+    And higher-priority blocking events should prevent lower-priority events from firing
+
+  Scenario: Blocking events halt multi-tick processing
+    Given the game is processing multiple ticks
+    When a blocking triggered event fires
+    Then the game should pause
+    And remaining ticks should not be processed
+
+  Scenario: Non-blocking events allow continued tick processing
+    Given a non-blocking triggered event fires during a tick
+    When the tick continues processing
+    Then normal XP and money gains should still be applied
+    And subsequent events should see the updated state
+
+  Scenario: Location entry effects apply on changeLocation
+    Given a location has entry effects defined
+    When the player moves to that location via changeLocation
+    Then all entry effects should be applied in order
+    And the game should pause for the player to choose actions
+
+  Scenario: Prison entry applies data-driven entry effects
+    Given the prison location has entryEffects for food, housing, and pending relocation
+    When the player is sent to prison via changeLocation
+    Then the player's food should be set to "prison_food"
+    And the player's housing should be set to "prison_cell"
+    And a pending relocation to "slums" should be created with 365 day duration

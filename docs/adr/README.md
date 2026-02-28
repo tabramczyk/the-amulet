@@ -9,6 +9,7 @@
 | 0003 | Zustand for state management | Accepted | 2026-02-08 |
 | 0004 | Spec-first development workflow | Accepted | 2026-02-08 |
 | 0005 | Vanilla DOM over framework for UI | Accepted | 2026-02-08 |
+| 0006 | Data-driven triggered event system | Accepted | 2026-03-01 |
 
 ## How to Add an ADR
 

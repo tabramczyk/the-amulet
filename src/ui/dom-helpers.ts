@@ -127,5 +127,17 @@ export function formatRequirement(req: ActionRequirement): string {
     }
     case 'pendingRelocationLastDay':
       return 'Last day of sentence';
+    case 'location':
+      return `At ${req.locationId}`;
+    case 'relocationDay': {
+      if (req.minDay !== undefined && req.maxDay !== undefined) {
+        return `Day ${req.minDay}-${req.maxDay} of sentence`;
+      }
+      if (req.minDay !== undefined) return `Day ${req.minDay}+ of sentence`;
+      if (req.maxDay !== undefined) return `Day ≤${req.maxDay} of sentence`;
+      return 'Sentence day requirement';
+    }
+    case 'hasPendingRelocation':
+      return req.value ? 'Serving a sentence' : 'No active sentence';
   }
 }

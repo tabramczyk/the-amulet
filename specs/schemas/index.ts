@@ -80,3 +80,8 @@ export {
   ClickActionCategorySchema,
   type ClickActionCategory,
 } from './action.schema';
+
+export {
+  TriggeredEventSchema,
+  type TriggeredEvent,
+} from './triggered-event.schema';

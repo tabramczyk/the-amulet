@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.3.0] - 2026-03-01
+
+### Changed
+- Life-cycle system refactored from hardcoded events to data-driven triggered event system
+- `processMultipleTicks` now halts on any blocking event (was death-only)
+- `changeLocation` effect now applies data-driven `entryEffects` from location definitions (was hardcoded prison setup)
+- `applySingleClickEffect` exported for reuse by event system
+
+### Added
+- Triggered event system (`src/systems/event-system.ts`) — evaluates data-defined events each tick with priority ordering, blocking/non-blocking behavior, and AND-condition logic
+- `TriggeredEvent` schema (`specs/schemas/triggered-event.schema.ts`) composing existing `ActionRequirement` and `ActionEffect` unions
+- `entryEffects` field on Location schema for data-driven location entry behavior
+- 3 new `ActionRequirement` types: `location`, `relocationDay`, `hasPendingRelocation`
+- 2 new `ActionEffect` types: `setHousingId`, `setPendingRelocation`
+- Event data file (`src/data/events.ts`) with 4 triggered events: meal theft, bandit proposal, amulet awakening, death gate
+- Prison entry effects in location data (food, housing, pending relocation)
+- ADR-0006: Data-driven triggered events
+- Comprehensive tests for event system, new requirement types, and new effect types
+
 ## [0.2.0] - 2026-02-22
 
 ### Changed

@@ -34,6 +34,19 @@ export const ActionRequirementSchema = z.discriminatedUnion('type', [
   z.object({
     type: z.literal('pendingRelocationLastDay'),
   }),
+  z.object({
+    type: z.literal('location'),
+    locationId: z.string().min(1),
+  }),
+  z.object({
+    type: z.literal('relocationDay'),
+    minDay: z.number().int().min(0).optional(),
+    maxDay: z.number().int().optional(),
+  }),
+  z.object({
+    type: z.literal('hasPendingRelocation'),
+    value: z.boolean(),
+  }),
 ]);
 
 export type ActionRequirement = z.infer<typeof ActionRequirementSchema>;
@@ -50,6 +63,14 @@ export const ActionEffectSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('joinClan'), clanId: z.string() }),
   z.object({ type: z.literal('clearPendingRelocation') }),
   z.object({ type: z.literal('setFoodId'), foodId: z.string().nullable() }),
+  z.object({ type: z.literal('setHousingId'), housingId: z.string().nullable() }),
+  z.object({
+    type: z.literal('setPendingRelocation'),
+    targetLocationId: z.string().min(1),
+    durationDays: z.number().int().min(1),
+    message: z.string().optional(),
+    trackEntryDay: z.boolean().optional(),
+  }),
 ]);
 
 export type ActionEffect = z.infer<typeof ActionEffectSchema>;

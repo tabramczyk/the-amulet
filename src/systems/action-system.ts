@@ -20,7 +20,8 @@ export function isRequirementMet(
   currentAge: number,
   clanIds: string[] = [],
   currentDay: number = 0,
-  pendingRelocation: { targetDay: number } | null = null,
+  pendingRelocation: { targetDay: number; entryDay?: number } | null = null,
+  currentLocationId: string = '',
 ): boolean {
   switch (req.type) {
     case 'skill': {
@@ -48,6 +49,17 @@ export function isRequirementMet(
     }
     case 'pendingRelocationLastDay':
       return pendingRelocation !== null && currentDay >= pendingRelocation.targetDay - 1;
+    case 'location':
+      return currentLocationId === req.locationId;
+    case 'relocationDay': {
+      if (!pendingRelocation || !('entryDay' in pendingRelocation) || pendingRelocation.entryDay === undefined) return false;
+      const elapsedDays = currentDay - pendingRelocation.entryDay;
+      if (req.minDay !== undefined && elapsedDays < req.minDay) return false;
+      if (req.maxDay !== undefined && elapsedDays > req.maxDay) return false;
+      return true;
+    }
+    case 'hasPendingRelocation':
+      return (pendingRelocation !== null) === req.value;
   }
 }
 
@@ -62,10 +74,11 @@ export function areActionRequirementsMet(
   currentAge: number,
   clanIds: string[] = [],
   currentDay: number = 0,
-  pendingRelocation: { targetDay: number } | null = null,
+  pendingRelocation: { targetDay: number; entryDay?: number } | null = null,
+  currentLocationId: string = '',
 ): boolean {
   return requirements.every((req) =>
-    isRequirementMet(req, skills, jobs, storyFlags, currentAge, clanIds, currentDay, pendingRelocation),
+    isRequirementMet(req, skills, jobs, storyFlags, currentAge, clanIds, currentDay, pendingRelocation, currentLocationId),
   );
 }
 
@@ -80,12 +93,12 @@ export function getAvailableClickActions(
   currentAge: number,
   clanIds: string[] = [],
   currentDay: number = 0,
-  pendingRelocation: { targetDay: number } | null = null,
+  pendingRelocation: { targetDay: number; entryDay?: number } | null = null,
 ): ClickAction[] {
   return Object.values(CLICK_ACTIONS).filter(
     (action) =>
       action.locationId === currentLocationId &&
-      areActionRequirementsMet(action.requirements, skills, jobs, storyFlags, currentAge, clanIds, currentDay, pendingRelocation),
+      areActionRequirementsMet(action.requirements, skills, jobs, storyFlags, currentAge, clanIds, currentDay, pendingRelocation, currentLocationId),
   );
 }
 
@@ -100,12 +113,12 @@ export function getAvailableContinuousActions(
   currentAge: number,
   clanIds: string[] = [],
   currentDay: number = 0,
-  pendingRelocation: { targetDay: number } | null = null,
+  pendingRelocation: { targetDay: number; entryDay?: number } | null = null,
 ): ContinuousAction[] {
   return Object.values(CONTINUOUS_ACTIONS).filter(
     (action) =>
       action.locationId === currentLocationId &&
-      areActionRequirementsMet(action.requirements, skills, jobs, storyFlags, currentAge, clanIds, currentDay, pendingRelocation),
+      areActionRequirementsMet(action.requirements, skills, jobs, storyFlags, currentAge, clanIds, currentDay, pendingRelocation, currentLocationId),
   );
 }
 

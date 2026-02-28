@@ -8,6 +8,7 @@ import {
   HousingOptionSchema,
   FoodOptionSchema,
   ClanSchema,
+  TriggeredEventSchema,
 } from '../../specs/schemas';
 import { SKILLS } from '../../src/data/skills';
 import { JOBS } from '../../src/data/jobs';
@@ -16,6 +17,7 @@ import { CONTINUOUS_ACTIONS, CLICK_ACTIONS } from '../../src/data/actions';
 import { HOUSING_OPTIONS } from '../../src/data/housing';
 import { FOOD_OPTIONS } from '../../src/data/food';
 import { CLANS } from '../../src/data/clans';
+import { TRIGGERED_EVENTS } from '../../src/data/events';
 
 describe('Data Validation', () => {
   describe('Skills', () => {
@@ -210,6 +212,42 @@ describe('Data Validation', () => {
     it('should have army and bandits clans', () => {
       expect(CLANS['army']).toBeDefined();
       expect(CLANS['bandits']).toBeDefined();
+    });
+  });
+
+  describe('Triggered Events', () => {
+    it('should have at least 1 triggered event defined', () => {
+      expect(TRIGGERED_EVENTS.length).toBeGreaterThan(0);
+    });
+
+    it.each(TRIGGERED_EVENTS.map((e) => [e.id, e] as [string, typeof e]))(
+      'triggered event "%s" should match TriggeredEventSchema',
+      (_id, event) => {
+        const result = TriggeredEventSchema.safeParse(event);
+        expect(result.success).toBe(true);
+      },
+    );
+
+    it('should have all 4 core triggered events', () => {
+      const ids = TRIGGERED_EVENTS.map((e) => e.id);
+      expect(ids).toContain('prison_meal_theft');
+      expect(ids).toContain('bandit_proposal');
+      expect(ids).toContain('amulet_awakening');
+      expect(ids).toContain('death_gate');
+    });
+
+    it('death_gate event should have the highest priority', () => {
+      const deathGate = TRIGGERED_EVENTS.find((e) => e.id === 'death_gate');
+      const maxPriority = Math.max(...TRIGGERED_EVENTS.map((e) => e.priority));
+      expect(deathGate?.priority).toBe(maxPriority);
+    });
+
+    it('blocking events should have priority > 0', () => {
+      for (const event of TRIGGERED_EVENTS) {
+        if (event.blocking) {
+          expect(event.priority).toBeGreaterThan(0);
+        }
+      }
     });
   });
 });

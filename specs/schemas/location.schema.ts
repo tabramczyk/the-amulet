@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { ActionEffectSchema } from './action.schema';
 
 // --- Location Requirement ---
 
@@ -34,6 +35,7 @@ export const LocationSchema = z.object({
   requirements: z.array(LocationRequirementSchema).default([]),
   availableJobIds: z.array(z.string().min(1)),
   availableTrainingSkillIds: z.array(z.string().min(1)),
+  entryEffects: z.array(ActionEffectSchema).default([]),
 });
 
 export type Location = z.infer<typeof LocationSchema>;

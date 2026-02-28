@@ -422,6 +422,165 @@ describe('Life Cycle System', () => {
     });
   });
 
+  describe('setHousingId effect', () => {
+    it('should set housingId to a string value', () => {
+      const state = makeState();
+      const effects: ActionEffect[] = [
+        { type: 'setHousingId', housingId: 'tent' },
+      ];
+      const result = applyClickActionEffects(state, effects, 0);
+      expect(result.player.currentHousingId).toBe('tent');
+    });
+
+    it('should set housingId to null (eviction)', () => {
+      const state = makeState({
+        player: {
+          ...createInitialGameState().player,
+          currentHousingId: 'room',
+        },
+      });
+      const effects: ActionEffect[] = [
+        { type: 'setHousingId', housingId: null },
+      ];
+      const result = applyClickActionEffects(state, effects, 0);
+      expect(result.player.currentHousingId).toBeNull();
+    });
+  });
+
+  describe('setPendingRelocation effect', () => {
+    it('should create pendingRelocation with targetDay = currentDay + durationDays', () => {
+      const state = makeState({
+        time: { currentDay: 10, currentAge: 16, tickAccumulator: 0 },
+      });
+      const effects: ActionEffect[] = [
+        { type: 'setPendingRelocation', targetLocationId: 'slums', durationDays: 365 },
+      ];
+      const result = applyClickActionEffects(state, effects, 0);
+      expect(result.player.pendingRelocation).not.toBeNull();
+      expect(result.player.pendingRelocation?.targetLocationId).toBe('slums');
+      expect(result.player.pendingRelocation?.targetDay).toBe(375); // 10 + 365
+    });
+
+    it('should set message when provided', () => {
+      const state = makeState({
+        time: { currentDay: 0, currentAge: 16, tickAccumulator: 0 },
+      });
+      const effects: ActionEffect[] = [
+        {
+          type: 'setPendingRelocation',
+          targetLocationId: 'slums',
+          durationDays: 365,
+          message: "I'm finally free.",
+        },
+      ];
+      const result = applyClickActionEffects(state, effects, 0);
+      expect(result.player.pendingRelocation?.message).toBe("I'm finally free.");
+    });
+
+    it('should not set message when not provided', () => {
+      const state = makeState({
+        time: { currentDay: 0, currentAge: 16, tickAccumulator: 0 },
+      });
+      const effects: ActionEffect[] = [
+        { type: 'setPendingRelocation', targetLocationId: 'slums', durationDays: 365 },
+      ];
+      const result = applyClickActionEffects(state, effects, 0);
+      expect(result.player.pendingRelocation?.message).toBeUndefined();
+    });
+
+    it('should set entryDay = currentDay when trackEntryDay is true', () => {
+      const state = makeState({
+        time: { currentDay: 42, currentAge: 16, tickAccumulator: 0 },
+      });
+      const effects: ActionEffect[] = [
+        {
+          type: 'setPendingRelocation',
+          targetLocationId: 'slums',
+          durationDays: 365,
+          trackEntryDay: true,
+        },
+      ];
+      const result = applyClickActionEffects(state, effects, 0);
+      expect(result.player.pendingRelocation?.entryDay).toBe(42);
+    });
+
+    it('should not set entryDay when trackEntryDay is false', () => {
+      const state = makeState({
+        time: { currentDay: 42, currentAge: 16, tickAccumulator: 0 },
+      });
+      const effects: ActionEffect[] = [
+        {
+          type: 'setPendingRelocation',
+          targetLocationId: 'slums',
+          durationDays: 365,
+          trackEntryDay: false,
+        },
+      ];
+      const result = applyClickActionEffects(state, effects, 0);
+      expect(result.player.pendingRelocation?.entryDay).toBeUndefined();
+    });
+
+    it('should not set entryDay when trackEntryDay is not provided', () => {
+      const state = makeState({
+        time: { currentDay: 42, currentAge: 16, tickAccumulator: 0 },
+      });
+      const effects: ActionEffect[] = [
+        { type: 'setPendingRelocation', targetLocationId: 'slums', durationDays: 365 },
+      ];
+      const result = applyClickActionEffects(state, effects, 0);
+      expect(result.player.pendingRelocation?.entryDay).toBeUndefined();
+    });
+  });
+
+  describe('changeLocation with location entryEffects', () => {
+    it('should apply entryEffects from target location definition when changing location', () => {
+      // A location with entryEffects will have them applied automatically by the refactored handler.
+      // Prison has entryEffects: setFoodId, setHousingId, setPendingRelocation (after refactor).
+      // After the refactor, prison entry must be driven by LOCATIONS[prison].entryEffects,
+      // NOT hardcoded conditionals. This test verifies the generic mechanism works.
+      const state = makeState({
+        time: { currentDay: 0, currentAge: 16, tickAccumulator: 0 },
+      });
+      const effects: ActionEffect[] = [
+        { type: 'changeLocation', locationId: 'prison' },
+      ];
+      const result = applyClickActionEffects(state, effects, 0);
+      // Prison entryEffects should set food, housing, and pendingRelocation
+      expect(result.player.currentLocationId).toBe('prison');
+      expect(result.player.currentFoodId).toBe('prison_food');
+      expect(result.player.currentHousingId).toBe('prison_cell');
+      expect(result.player.pendingRelocation?.targetDay).toBe(365);
+      expect(result.player.pendingRelocation?.entryDay).toBe(0);
+    });
+
+    it('should not apply extra food/housing for locations without entryEffects', () => {
+      const state = makeState();
+      const effects: ActionEffect[] = [
+        { type: 'changeLocation', locationId: 'fields' },
+      ];
+      const result = applyClickActionEffects(state, effects, 0);
+      expect(result.player.currentFoodId).toBeNull();
+      expect(result.player.currentHousingId).toBeNull();
+      expect(result.player.pendingRelocation).toBeNull();
+    });
+
+    it('should not carry over previous pendingRelocation on changeLocation to non-prison location', () => {
+      // When changeLocation is refactored, it should not carry over pendingRelocation from prior state
+      // for locations that define no entryEffects (previously the code preserved it).
+      const state = makeState({
+        player: {
+          ...createInitialGameState().player,
+          pendingRelocation: null,
+        },
+      });
+      const effects: ActionEffect[] = [
+        { type: 'changeLocation', locationId: 'slums' },
+      ];
+      const result = applyClickActionEffects(state, effects, 0);
+      expect(result.player.pendingRelocation).toBeNull();
+    });
+  });
+
   describe('amulet awakening at age 30', () => {
     // Age 30 = STARTING_AGE (16) + 14 years = 14 * 365 = 5110 days
     const age30Day = (30 - 16) * 365; // 5110

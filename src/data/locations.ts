@@ -8,6 +8,7 @@ export const LOCATIONS: Record<string, Location> = {
     requirements: [],
     availableJobIds: ['beggar', 'scavenger', 'errand_runner'],
     availableTrainingSkillIds: ['concentration', 'endurance'],
+    entryEffects: [],
   },
   fields: {
     id: 'fields',
@@ -18,6 +19,7 @@ export const LOCATIONS: Record<string, Location> = {
     ],
     availableJobIds: ['fisherman', 'farmer', 'shepherd', 'woodcutter', 'hunter'],
     availableTrainingSkillIds: ['strength', 'endurance'],
+    entryEffects: [],
   },
   village: {
     id: 'village',
@@ -28,6 +30,7 @@ export const LOCATIONS: Record<string, Location> = {
     ],
     availableJobIds: ['laborer'],
     availableTrainingSkillIds: ['strength', 'intelligence'],
+    entryEffects: [],
   },
   prison: {
     id: 'prison',
@@ -36,6 +39,17 @@ export const LOCATIONS: Record<string, Location> = {
     requirements: [],
     availableJobIds: [],
     availableTrainingSkillIds: ['concentration', 'strength'],
+    entryEffects: [
+      { type: 'setFoodId', foodId: 'prison_food' },
+      { type: 'setHousingId', housingId: 'prison_cell' },
+      {
+        type: 'setPendingRelocation',
+        targetLocationId: 'slums',
+        durationDays: 365,
+        message: "I'm finally free.",
+        trackEntryDay: true,
+      },
+    ],
   },
   death_gate: {
     id: 'death_gate',
@@ -44,6 +58,7 @@ export const LOCATIONS: Record<string, Location> = {
     requirements: [],
     availableJobIds: [],
     availableTrainingSkillIds: [],
+    entryEffects: [],
   },
   barracks: {
     id: 'barracks',
@@ -52,6 +67,7 @@ export const LOCATIONS: Record<string, Location> = {
     requirements: [{ type: 'clan', clanId: 'army' }],
     availableJobIds: ['soldier'],
     availableTrainingSkillIds: ['strength'],
+    entryEffects: [],
   },
   bandit_hideout: {
     id: 'bandit_hideout',
@@ -60,5 +76,6 @@ export const LOCATIONS: Record<string, Location> = {
     requirements: [{ type: 'clan', clanId: 'bandits' }],
     availableJobIds: ['robbery'],
     availableTrainingSkillIds: ['strength', 'endurance'],
+    entryEffects: [],
   },
 };
